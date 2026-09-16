@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0a0a0d">
+  <title>Support the Stream</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="support-shell">
+    <header class="topbar">
+      <div class="brand"><div class="brandmark">✦</div><span id="brandName">MY STREAM</span></div>
+      <div class="live-chip"><span></span> LIVE SUPPORT</div>
+    </header>
+
+    <section class="stream-head panel-soft">
+      <div class="profile">
+        <div class="avatar">🎮</div>
+        <div>
+          <div class="name"><span id="creatorName"></span> <span class="verified">●</span></div>
+          <div class="sub"><span id="handle"></span> · choose how you want to interact with the stream</div>
+        </div>
+      </div>
+      <div class="mini-note">Payments trigger stream interactions only after payment verification.</div>
+    </section>
+
+    <section class="interaction-tabs" aria-label="Support type">
+      <button class="interaction-tab active" data-tab="support"><span>💬</span><strong>Support + TTS</strong><small>Send a message</small></button>
+      <button class="interaction-tab" data-tab="drops"><span>✨</span><strong>Rare Drops</strong><small>Premium alerts</small></button>
+      <button class="interaction-tab" data-tab="challenges"><span>🎯</span><strong>Challenges</strong><small>Change the stream</small></button>
+      <button class="interaction-tab demo-tab-btn" data-tab="demo"><span>🧪</span><strong>Demo Alert</strong><small>Try it on stream</small></button>
+    </section>
+
+    <section id="supportPanel" class="interaction-panel active">
+      <div class="section-heading">
+        <div><div class="eyebrow">DIRECT SUPPORT</div><h1>Send support. <span>Say it live.</span></h1></div>
+        <div class="price-pill">TTS from <b id="ttsMinLabel">Rs 500</b></div>
+      </div>
+
+      <div class="two-col">
+        <div class="panel content-card">
+          <div class="label">Choose amount</div>
+          <div id="amounts" class="amounts"></div>
+          <input id="customAmount" class="field" type="number" min="1" inputmode="numeric" placeholder="Custom amount (PKR)">
+
+          <div class="label gap-top">Your name</div>
+          <input id="donorName" class="field" maxlength="40" placeholder="Display name or Anonymous">
+
+          <div class="label gap-top">Message</div>
+          <div class="message-wrap">
+            <textarea id="message" class="field" rows="4" placeholder="Write something for the stream…"></textarea>
+            <div class="message-meta"><span id="charCount">0 / 180</span></div>
+          </div>
+
+          <label id="ttsCard" class="tts-card">
+            <input id="ttsEnabled" type="checkbox">
+            <span class="tts-icon">🔊</span>
+            <span class="tts-copy"><strong>Read this message on stream</strong><small id="ttsRule">Unlocks at Rs 500</small></span>
+            <span id="ttsStatus" class="tts-status">TTS</span>
+          </label>
+        </div>
+
+        <aside class="panel checkout-card">
+          <div class="eyebrow">YOUR SUPPORT</div>
+          <div class="checkout-price"><span id="supportPrice">Rs 500</span></div>
+          <div class="summary-line"><span>Interaction</span><b>Support + message</b></div>
+          <div class="summary-line"><span>TTS</span><b id="supportTtsSummary">Included</b></div>
+          <div class="summary-line"><span>Alert</span><b>Standard</b></div>
+          <div class="divider"></div>
+          <button id="supportBtn" class="btn primary full">Continue to payment</button>
+          <div class="payment-hints"><span>🇵🇰 Local methods</span><span>🌍 International cards</span></div>
+          <div id="notice" class="notice"></div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="dropsPanel" class="interaction-panel">
+      <div class="section-heading">
+        <div><div class="eyebrow">SIGNATURE INTERACTIONS</div><h1>Trigger a <span>Rare Drop.</span></h1><p class="section-copy">These are your own limited premium alerts. Set the animation, sound, price and availability yourself.</p></div>
+      </div>
+      <div id="dropGrid" class="card-grid"></div>
+      <div class="panel purchase-drawer" id="dropDrawer">
+        <div><div class="eyebrow">SELECTED DROP</div><h3 id="dropSelectedName">Choose a Rare Drop above</h3><p id="dropSelectedDesc" class="sub">Your selected drop will appear here.</p></div>
+        <div class="drawer-actions">
+          <input id="dropDonorName" class="field compact" maxlength="40" placeholder="Display name">
+          <input id="dropMessage" class="field compact" maxlength="180" placeholder="Optional TTS message">
+          <button id="dropBuyBtn" class="btn primary" disabled>Choose a drop</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="challengesPanel" class="interaction-panel">
+      <div class="section-heading">
+        <div><div class="eyebrow">VIEWER-CONTROLLED MOMENTS</div><h1>Buy a <span>Challenge.</span></h1><p class="section-copy">Only challenges you pre-approve are listed. Viewers pay to trigger one; you stay in control of safety and game suitability.</p></div>
+      </div>
+      <div id="challengeGrid" class="card-grid"></div>
+      <div class="panel purchase-drawer" id="challengeDrawer">
+        <div><div class="eyebrow">SELECTED CHALLENGE</div><h3 id="challengeSelectedName">Choose a Challenge above</h3><p id="challengeSelectedDesc" class="sub">Challenge details will appear here.</p></div>
+        <div class="drawer-actions">
+          <input id="challengeDonorName" class="field compact" maxlength="40" placeholder="Display name">
+          <input id="challengeNote" class="field compact" maxlength="120" placeholder="Optional note / allowed choice">
+          <button id="challengeBuyBtn" class="btn primary" disabled>Choose a challenge</button>
+        </div>
+      </div>
+    </section>
+
+
+    <section id="demoPanel" class="interaction-panel">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">LIVE DEMO — NO PAYMENT</div>
+          <h1>Send a <span>demo alert</span> to the stream.</h1>
+          <p class="section-copy">Pick an alert style, add your name and message, then send it straight to the stream overlay. Demo alerts are clearly labelled and do not charge you.</p>
+        </div>
+        <div class="demo-live-pill"><span></span> OBS DEMO</div>
+      </div>
+
+      <div class="two-col demo-two-col">
+        <div class="panel content-card">
+          <div class="label">Choose demo type</div>
+          <div class="demo-type-grid" id="demoTypeGrid">
+            <button type="button" class="demo-type active" data-demo-type="support">
+              <span class="demo-type-icon">💬</span><strong>Support + TTS</strong><small>Standard support alert</small>
+            </button>
+            <button type="button" class="demo-type" data-demo-type="drop">
+              <span class="demo-type-icon">✨</span><strong>Rare Drop</strong><small>Premium drop preview</small>
+            </button>
+            <button type="button" class="demo-type" data-demo-type="challenge">
+              <span class="demo-type-icon">🎯</span><strong>Challenge</strong><small>Challenge alert preview</small>
+            </button>
+          </div>
+
+          <div class="label gap-top">Your display name</div>
+          <input id="demoViewerName" class="field" maxlength="32" placeholder="Your name or Anonymous">
+
+          <div class="label gap-top">Message</div>
+          <div class="message-wrap">
+            <textarea id="demoViewerMessage" class="field" rows="4" maxlength="120" placeholder="Write a short demo message…"></textarea>
+            <div class="message-meta"><span id="demoCharCount">0 / 120</span></div>
+          </div>
+
+          <label id="demoTtsCard" class="tts-card">
+            <input id="demoTtsEnabled" type="checkbox" checked>
+            <span class="tts-icon">🔊</span>
+            <span class="tts-copy"><strong>Read demo message with TTS</strong><small>Available for Support and Rare Drop demos</small></span>
+            <span class="tts-status">DEMO TTS</span>
+          </label>
+        </div>
+
+        <aside class="panel checkout-card demo-send-card">
+          <div class="eyebrow">DEMO PREVIEW</div>
+          <div class="demo-preview-icon" id="demoPreviewIcon">💬</div>
+          <h3 id="demoPreviewTitle">Support + TTS</h3>
+          <p class="sub" id="demoPreviewCopy">Sends a standard demo support alert to the live OBS overlay.</p>
+          <div class="summary-line"><span>Charge</span><b>Rs 0 — Demo only</b></div>
+          <div class="summary-line"><span>OBS label</span><b>DEMO</b></div>
+          <div class="summary-line"><span>Cooldown</span><b id="demoCooldownLabel">20 seconds</b></div>
+          <div class="divider"></div>
+          <button id="sendViewerDemo" class="btn primary full">🧪 Send demo alert</button>
+          <div id="demoViewerNotice" class="demo-viewer-notice" aria-live="polite"></div>
+          <div class="demo-disclaimer">Demo alerts may be disabled or rate-limited by the streamer at any time.</div>
+        </aside>
+      </div>
+    </section>
+
+    <footer class="support-footer">
+      <div>🔒 Payment verified before any stream alert</div>
+      <div>🛡️ Messages are moderated</div>
+      <div>🎥 Built for one stream, one overlay, one dashboard</div>
+    </footer>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="realtime-preview.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

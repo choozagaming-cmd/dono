@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Overlay Studio</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="overlay-editor.css">
+</head>
+<body class="studio-body">
+  <header class="studio-topbar">
+    <div>
+      <div class="eyebrow">PERSONAL STREAM OVERLAY STUDIO</div>
+      <h1>Build what viewers trigger.</h1>
+      <p>Design Support/TTS, Rare Drops and Challenges on a true 1920×1080 canvas.</p>
+    </div>
+    <div class="studio-actions">
+      <button class="btn" id="undoBtn" title="Undo (Ctrl/Cmd+Z)">↶ Undo</button>
+      <button class="btn" id="redoBtn" title="Redo (Ctrl/Cmd+Shift+Z)">↷ Redo</button>
+      <a class="btn" href="dashboard.html">Dashboard</a>
+      <a class="btn" id="openOverlay" href="overlay.html?obs=1" target="_blank" rel="noopener">Open live overlay</a>
+      <button class="btn" id="resetLayout">Reset scene</button>
+      <button class="btn primary" id="saveLayout">Save layout</button>
+    </div>
+  </header>
+
+  <main class="studio-shell">
+    <aside class="studio-panel tool-panel">
+      <div class="tool-title">Scene</div>
+      <div id="sceneTabs" class="scene-tabs"></div>
+
+      <div class="tool-title gap-top">Add element</div>
+      <div class="tool-grid">
+        <button data-add="text">T Text</button>
+        <button data-add="box">▭ Box</button>
+        <button data-add="media">▣ Media</button>
+      </div>
+
+      <div class="tool-title gap-top">My assets</div>
+      <div class="asset-actions">
+        <label class="asset-upload">＋ Upload<input id="assetUpload" type="file" accept="image/*,video/*,audio/*" multiple></label>
+        <button id="addAssetUrl">🔗 Add URL</button>
+      </div>
+      <div id="assetLibrary" class="asset-library"></div>
+      <small class="asset-note">Signed-in uploads are stored permanently in Supabase Storage so OBS can load them. If signed out, file uploads are disabled.</small>
+      <div class="storage-auth-card">
+        <div><span id="storageDot" class="transport-dot"></span><b id="storageStatus">Storage signed out</b></div>
+        <input id="storageEmail" type="email" placeholder="Admin email" autocomplete="username">
+        <input id="storagePassword" type="password" placeholder="Password" autocomplete="current-password">
+        <div class="asset-actions">
+          <button id="storageSignIn">Sign in</button>
+          <button id="storageSignUp">Create admin</button>
+          <button id="storageSignOut" hidden>Sign out</button>
+        </div>
+        <small>Use this only for your admin account. After creating it, disable public sign-ups in Supabase Auth for production.</small>
+      </div>
+
+      <div class="tool-title gap-top">Test event</div>
+      <div class="test-form">
+        <label>Viewer<input id="testName" value="Hamza"></label>
+        <label>Amount<input id="testAmount" type="number" value="10000"></label>
+        <label>Title<input id="testTitle" value="Crown Drop"></label>
+        <label>Message<textarea id="testMessage" rows="2">Crown Drop incoming!</textarea></label>
+        <label class="check-line"><input id="testTts" type="checkbox" checked> Read with TTS</label>
+      </div>
+      <div class="test-grid">
+        <button id="testEditor">▶ Test in editor</button>
+        <button id="testInObs" class="live-test">📺 Test current scene in OBS</button>
+      </div>
+      <div class="connection-card">
+        <div><span id="transportDot" class="transport-dot"></span><b id="transportLabel">Browser preview ready</b></div>
+        <small id="transportHelp">Supabase preconfigured for OBS testing. When the project is active, this editor can reach OBS through Realtime.</small>
+      </div>
+
+      <div class="tool-title gap-top">Layers</div>
+      <div id="layerList" class="layer-list"></div>
+    </aside>
+
+    <section class="stage-column">
+      <div class="stage-toolbar">
+        <span><b id="sceneName">Support / TTS</b> · 1920×1080</span>
+        <div class="zoom-tools">
+          <button id="zoomOut">−</button>
+          <select id="zoomSelect" aria-label="Canvas zoom">
+            <option value="fit">Fit</option>
+            <option value="0.25">25%</option>
+            <option value="0.5">50%</option>
+            <option value="0.75">75%</option>
+            <option value="1">100%</option>
+          </select>
+          <button id="zoomIn">＋</button>
+        </div>
+      </div>
+      <div id="stageViewport" class="stage-viewport">
+        <div id="stageWrap" class="stage-wrap">
+          <div id="stage" class="stage"></div>
+          <div id="guideV" class="snap-guide vertical" hidden></div>
+          <div id="guideH" class="snap-guide horizontal" hidden></div>
+        </div>
+      </div>
+      <div class="stage-help">Drag to move · orange handles resize · round handle rotates · arrow keys nudge · Shift+Arrow moves 10px · Delete removes · Ctrl/Cmd+Z undo.</div>
+    </section>
+
+    <aside class="studio-panel property-panel">
+      <div class="tool-title">Inspector</div>
+      <div id="emptyInspector" class="empty-inspector">Select an element on the canvas.</div>
+      <div id="inspector" hidden>
+        <div class="inspector-head">
+          <div><b id="selectedLabel">Element</b><small id="selectedType"></small></div>
+          <div class="inline-tools"><button id="lockEl" title="Lock">🔓</button><button id="hideEl" title="Hide">👁</button></div>
+        </div>
+        <label>ID<input id="pId" disabled></label>
+        <label>Dynamic role<select id="pRole">
+          <option value="">Static</option><option value="label">Label</option><option value="name">Viewer name</option><option value="amount">Amount</option><option value="title">Event title</option><option value="message">Message</option><option value="icon">Icon</option><option value="ttsBadge">TTS badge</option><option value="dropMedia">Drop media</option>
+        </select></label>
+        <label>Static text<textarea id="pText" rows="2"></textarea></label>
+        <label>Media URL<input id="pSrc" placeholder="https://... or assets/file.webm"></label>
+        <div class="four-cols"><label>X<input id="pX" type="number"></label><label>Y<input id="pY" type="number"></label><label>W<input id="pW" type="number"></label><label>H<input id="pH" type="number"></label></div>
+        <div class="three-cols"><label>Rotate<input id="pRotate" type="number" step="1"></label><label>Opacity<input id="pOpacity" type="number" min="0" max="1" step="0.05"></label><label>Radius<input id="pRadius" type="number"></label></div>
+        <div class="two-cols"><label>Font<input id="pFont" type="number"></label><label>Weight<input id="pWeight" type="number" step="50"></label></div>
+        <div class="two-cols"><label>Text color<input id="pColor" type="color"></label><label>Background<input id="pBg" type="color"></label></div>
+        <div class="two-cols"><label>Border<input id="pBorder" type="color"></label><label>Border width<input id="pBorderW" type="number"></label></div>
+        <label>Alignment<select id="pAlign"><option>left</option><option>center</option><option>right</option></select></label>
+        <div class="two-cols"><label>Enter animation<select id="pEnter"><option value="none">None</option><option value="fade">Fade</option><option value="pop">Pop</option><option value="slide-up">Slide up</option><option value="slide-left">Slide left</option><option value="bounce">Bounce</option></select></label><label>Exit animation<select id="pExit"><option value="none">None</option><option value="fade">Fade</option><option value="shrink">Shrink</option><option value="slide-down">Slide down</option></select></label></div>
+        <div class="two-cols"><label>Anim. ms<input id="pAnimMs" type="number" step="50" min="0"></label><label>Object fit<select id="pFit"><option value="contain">Contain</option><option value="cover">Cover</option><option value="fill">Fill</option></select></label></div>
+        <div class="inspector-actions"><button id="sendBack">↓ Back</button><button id="bringFront">↑ Front</button><button id="duplicateEl">Duplicate</button><button id="deleteEl" class="danger">Delete</button></div>
+      </div>
+
+      <div class="tool-title gap-top">Scene settings</div>
+      <div class="scene-settings">
+        <label>Duration (ms)<input id="sceneDuration" type="number" min="500" step="100"></label>
+        <label>Scene sound URL<input id="sceneSound" placeholder="https://.../sound.mp3"></label>
+        <label>Scene background<input id="sceneBg" type="color" value="#000000"></label>
+      </div>
+
+      <div id="studioStatus" class="studio-status">Editor ready</div>
+      <div class="live-setup">
+        <div class="tool-title">Live connection</div>
+        <label>Supabase project URL<input id="sbUrl" placeholder="https://xxxx.supabase.co"></label>
+        <label>Publishable / anon key<input id="sbKey" type="password" placeholder="sb_publishable_... or anon key"></label>
+        <label>Preview channel<input id="sbChannel" value="stream-preview-main"></label>
+        <button id="saveRealtime" class="setup-btn">Save connection</button>
+        <label>OBS browser-source URL<textarea id="obsUrl" rows="4" readonly></textarea></label>
+        <button id="copyObsUrl" class="setup-btn secondary">Copy OBS URL</button>
+        <small class="setup-warning">Testing transport only. The final production trigger path will use private/authenticated events after payment verification.</small>
+      </div>
+    </aside>
+  </main>
+
+  <dialog id="assetUrlDialog" class="asset-dialog">
+    <form method="dialog" id="assetUrlForm">
+      <h3>Add asset by URL</h3>
+      <label>Name<input id="assetUrlName" required placeholder="Crown Drop"></label>
+      <label>URL<input id="assetUrlValue" required placeholder="https://.../crown.webm"></label>
+      <div class="dialog-actions"><button value="cancel">Cancel</button><button id="confirmAssetUrl" value="default" class="primary">Add asset</button></div>
+    </form>
+  </dialog>
+
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="realtime-preview.js"></script>
+  <script src="overlay-layout.js"></script>
+  <script src="overlay-editor.js"></script>
+</body>
+</html>

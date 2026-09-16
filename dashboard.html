@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Personal Stream Control</title><link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="dashboard">
+  <aside class="sidebar">
+    <div class="brand"><div class="brandmark">✦</div><span>Stream Control</span></div>
+    <div class="side-caption">ONE STREAMER ONLY</div>
+    <div class="sideitem active">Live control</div>
+    <div class="sideitem">TTS</div>
+    <div class="sideitem"><a href="overlay-editor.html" style="color:inherit;text-decoration:none">Overlay Studio</a></div>
+    <div class="sideitem">Rare drops</div>
+    <div class="sideitem">Challenges</div>
+    <div class="sideitem">Payments</div>
+    <div class="sideitem">Moderation</div>
+  </aside>
+
+  <main class="main">
+    <div class="nav dashboard-head">
+      <div><div class="eyebrow">PERSONAL COMMAND CENTER</div><h1>Run the stream interactions.</h1><div class="sub">No creator marketplace, no onboarding — just your viewers and your stream.</div></div>
+      <div class="head-actions"><a class="btn" href="overlay.html">Open overlay</a><a class="btn" href="overlay-editor.html">Overlay Studio</a><a class="btn primary" href="index.html">Open support tab</a></div>
+    </div>
+
+    <section class="section compact-section"><div class="metrics">
+      <div class="panel metric"><div class="k">Tonight</div><div class="v">Rs 18,450</div><div class="sub">demo revenue</div></div>
+      <div class="panel metric"><div class="k">TTS</div><div class="v">21</div><div class="sub">messages played</div></div>
+      <div class="panel metric"><div class="k">Rare drops</div><div class="v">4</div><div class="sub">premium alerts</div></div>
+      <div class="panel metric"><div class="k">Challenges</div><div class="v">3</div><div class="sub">triggered tonight</div></div>
+    </div></section>
+
+    <section class="dashboard-grid">
+      <div class="panel control-panel">
+        <div class="panel-title"><div><div class="eyebrow">LIVE SAFETY</div><h2>TTS & alert controls</h2></div><span class="status-live">● LIVE</span></div>
+        <div class="big-controls">
+          <button class="control-btn danger">🔇 Mute TTS</button>
+          <button class="control-btn">⏭ Skip current</button>
+          <button class="control-btn">⏸ Pause queue</button>
+          <button class="control-btn">🗑 Clear queue</button>
+        </div>
+        <div class="setting-row"><span>TTS minimum</span><strong>Rs 500</strong></div>
+        <div class="setting-row"><span>Message length</span><strong>180 characters</strong></div>
+        <div class="setting-row"><span>Links / blocked terms</span><strong>Filtered</strong></div>
+      </div>
+
+      <div class="panel control-panel">
+        <div class="eyebrow">OBS</div><h2>One private overlay</h2>
+        <p class="sub">Support, Rare Drops and Challenges all enter the same ordered alert queue.</p>
+        <code class="codebox">/overlay.html?obs=1&amp;token=YOUR_PRIVATE_TOKEN</code>
+        <div class="setting-row"><span>Standard alert</span><strong>Enabled</strong></div>
+        <div class="setting-row"><span>Rare Drop animations</span><strong>Enabled</strong></div>
+        <div class="setting-row"><span>Challenge cards</span><strong>Enabled</strong></div>
+      </div>
+    </section>
+
+    <section class="section compact-section">
+      <div class="panel control-panel">
+        <div class="panel-title"><div><div class="eyebrow">YOUR MENU</div><h2>Curated interactions</h2></div><span class="sub">Edit these in config.js for the prototype</span></div>
+        <div class="dashboard-menu-grid">
+          <div class="menu-block"><span>🔊</span><b>Support + TTS</b><small>Normal support with optional spoken message.</small></div>
+          <div class="menu-block"><span>🔥</span><b>Rare Drops</b><small>Your limited signature alerts with custom prices and stock.</small></div>
+          <div class="menu-block"><span>🎯</span><b>Challenges</b><small>Only pre-approved challenges you are willing to perform.</small></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section compact-section">
+      <div class="panel control-panel">
+        <div class="eyebrow">RECENT QUEUE</div><h2>What viewers bought</h2>
+        <table class="table"><thead><tr><th>Viewer</th><th>Type</th><th>Item</th><th>Amount</th><th>Status</th></tr></thead><tbody>
+          <tr><td>Hamza</td><td>Rare Drop</td><td>Void Core</td><td>Rs 5,000</td><td><span class="badge">Played</span></td></tr>
+          <tr><td>Ayesha</td><td>TTS</td><td>Message</td><td>Rs 1,000</td><td><span class="badge">Played</span></td></tr>
+          <tr><td>Alex</td><td>Challenge</td><td>Viewer Picks My Loadout</td><td>Rs 2,500</td><td><span class="badge neutral">Queued</span></td></tr>
+        </tbody></table>
+      </div>
+    </section>
+  </main>
+</div>
+</body>
+</html>
