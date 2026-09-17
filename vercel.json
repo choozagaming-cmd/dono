@@ -23,5 +23,15 @@
         }
       ]
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/studio",
+      "destination": "/stream-studio.html"
+    },
+    {
+      "source": "/studio/",
+      "destination": "/stream-studio.html"
+    }
   ]
 }
