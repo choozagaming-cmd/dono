@@ -3,169 +3,190 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Stream Control Studio</title>
+  <title>Stream Command Center</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="stream-studio.css">
 </head>
-<body class="sc-body">
-<header class="sc-topbar">
-  <div>
-    <div class="sc-eyebrow">STREAM-SIDE CONTROL STUDIO</div>
-    <h1>Build alerts as blocks, not loose pieces.</h1>
-    <p>Choose your stream source, donation type, placement and style. Use Advanced Canvas only when you want pixel-level control.</p>
-  </div>
-  <div class="sc-top-actions">
-    <a class="sc-btn" href="dashboard.html">Dashboard</a>
-    <button class="sc-btn" id="copyObsProfileBtn">⧉ Copy OBS source</button>
-    <button class="sc-btn" id="testObsBtn">📺 Test in OBS</button>
-    <button class="sc-btn" id="publishObsBtn">⇧ Publish layout to OBS</button>
-    <button class="sc-btn primary" id="saveStudioBtn">Save studio</button>
-  </div>
-</header>
+<body class="cc-body">
+<div class="cc-app">
+  <aside class="cc-nav">
+    <div class="cc-profile">
+      <div class="cc-avatar">🎮</div>
+      <div class="cc-profile-copy"><span>@yourstream</span><b>My Stream</b><small>CREATOR</small></div>
+      <button class="cc-icon-btn" title="Settings">⚙</button>
+    </div>
 
-<main class="sc-shell">
-  <aside class="sc-sidebar">
-    <div class="sc-section-label">Source</div>
-    <div id="sourceProfiles" class="source-list"></div>
-
-    <div class="sc-section-label gap">Donation types</div>
-    <div id="donationTypes" class="type-list"></div>
-    <button id="addTypeBtn" class="sc-add-btn">＋ Add donation type</button>
-
-    <div class="sc-section-label gap">Tools</div>
-    <button id="openAdvancedBtn" class="sc-side-tool">⌖ Advanced Canvas</button>
-    <a href="overlay.html?obs=1" target="_blank" class="sc-side-tool">↗ Open overlay</a>
-    <a href="index.html" target="_blank" class="sc-side-tool">↗ Viewer page</a>
+    <div class="cc-nav-group"><span>OVERVIEW</span>
+      <a href="dashboard.html">▣ <b>Dashboard</b></a>
+      <button class="cc-nav-link" data-jump="interactionLibrary">✦ <b>Interactions</b></button>
+      <a href="dashboard.html#activity">◷ <b>Activity</b></a>
+    </div>
+    <div class="cc-nav-group"><span>CREATOR TOOLS</span>
+      <button class="cc-nav-link active" data-jump="studioWork">▰ <b>Stream Studio</b></button>
+      <button class="cc-nav-link" id="navAssets">▧ <b>Assets</b></button>
+      <button class="cc-nav-link" id="navAdvanced">⌖ <b>Advanced Canvas</b></button>
+      <a href="index.html" target="_blank">↗ <b>Viewer page</b></a>
+    </div>
+    <div class="cc-nav-bottom">
+      <div class="cc-ready-dot"></div><div><b>OBS link ready</b><small>Supabase Realtime connected</small></div>
+    </div>
   </aside>
 
-  <section class="sc-main">
-    <div class="source-head">
+  <section class="cc-page">
+    <header class="cc-topbar">
       <div>
-        <span class="source-pill" id="sourcePill">1080p Landscape</span>
-        <h2 id="typeTitle">Support + TTS</h2>
-        <p id="typeSubtitle">Normal support with an optional spoken message.</p>
+        <span class="cc-kicker">STREAM COMMAND CENTER</span>
+        <h1>Make every dono feel worth triggering.</h1>
       </div>
-      <div class="source-meta">
-        <b id="sourceResolution">1920 × 1080</b>
-        <span id="sourceUse">OBS Browser Source</span>
+      <div class="cc-top-actions">
+        <div class="cc-source-select-wrap">
+          <span>Source</span>
+          <select id="profileSelect"></select>
+        </div>
+        <button class="cc-btn" id="copyObsProfileBtn">🔗 OBS link</button>
+        <button class="cc-btn" id="testObsBtn">▶ Test</button>
+        <button class="cc-btn" id="publishObsBtn">⇧ Publish</button>
+        <button class="cc-btn primary" id="saveStudioBtn">Save</button>
       </div>
-    </div>
+    </header>
 
-    <div class="sc-tabs" id="configTabs">
-      <button class="active" data-tab="layout">Placement</button>
-      <button data-tab="appearance">Appearance</button>
-      <button data-tab="content">Content</button>
-      <button data-tab="audio">TTS & Audio</button>
-      <button data-tab="timing">Animation</button>
-    </div>
+    <main class="cc-content">
+      <section class="cc-hero-strip">
+        <div class="cc-step"><span>1</span><div><b>Choose interaction</b><small>TTS, drop, challenge, jumpscare…</small></div></div>
+        <div class="cc-step"><span>2</span><div><b>Pick impact</b><small>Toast, banner, spotlight or takeover</small></div></div>
+        <div class="cc-step"><span>3</span><div><b>Place once</b><small>Top, center, corner or bottom</small></div></div>
+        <div class="cc-step"><span>4</span><div><b>Publish to OBS</b><small>One source per resolution</small></div></div>
+      </section>
 
-    <div class="sc-workspace">
-      <div class="preview-column">
-        <div class="preview-toolbar">
-          <div><b>Stream preview</b><span id="previewHint">Placement preset: Bottom Center</span></div>
-          <div class="preview-tools">
-            <button id="safeAreaBtn" class="active">Safe area</button>
-            <button id="gridBtn">Grid</button>
+      <section id="studioWork" class="cc-studio-grid">
+        <aside id="interactionLibrary" class="cc-library">
+          <div class="cc-panel-head">
+            <div><span class="cc-kicker">INTERACTIONS</span><h2>What can viewers trigger?</h2></div>
+            <button id="addTypeBtn" class="cc-square-add">＋</button>
           </div>
-        </div>
-        <div id="previewViewport" class="preview-viewport">
-          <div id="previewStage" class="preview-stage">
-            <div id="safeArea" class="safe-area"></div>
-            <div id="previewGrid" class="preview-grid" hidden></div>
-            <div id="previewScene" class="preview-scene"></div>
+          <div class="cc-filter-row">
+            <button class="active" data-filter="all">All</button>
+            <button data-filter="support">TTS</button>
+            <button data-filter="drop">Drops</button>
+            <button data-filter="challenge">Challenges</button>
+            <button data-filter="custom">More</button>
           </div>
-        </div>
-        <div class="preview-footer">
-          <span>What you see here is the whole alert group.</span>
-          <button id="resetTypeBtn">Reset this type</button>
-        </div>
-      </div>
+          <div id="donationTypes" class="cc-type-list"></div>
+          <button id="addTypeWideBtn" class="cc-add-wide">＋ Add interaction</button>
+        </aside>
 
-      <aside class="quick-panel">
-        <section class="tab-panel active" data-panel="layout">
-          <div class="panel-kicker">QUICK PLACEMENT</div>
-          <h3>Where should this alert appear?</h3>
-          <p class="panel-copy">Pick one position. The full alert moves together.</p>
-          <div id="placementGrid" class="placement-grid"></div>
-          <div class="field-group">
-            <label>Alert size</label>
-            <div id="sizeChoices" class="segmented"></div>
+        <section class="cc-preview-card">
+          <div class="cc-preview-head">
+            <div>
+              <span id="sourcePill" class="cc-source-pill">1080p</span>
+              <b id="typeTitle">Support + TTS</b>
+              <small id="typeSubtitle">Normal support with a spoken message.</small>
+            </div>
+            <div class="cc-preview-head-actions">
+              <button id="safeAreaBtn" class="active">Safe area</button>
+              <button id="gridBtn">Grid</button>
+              <button id="openAdvancedBtn">⌖ Advanced</button>
+            </div>
           </div>
-          <label class="switch-row"><span><b>Keep inside safe area</b><small>Useful for facecam, chat and game HUDs.</small></span><input id="safePlacement" type="checkbox" checked></label>
+
+          <div id="previewViewport" class="cc-preview-viewport">
+            <div id="previewStage" class="cc-preview-stage">
+              <div id="safeArea" class="cc-safe-area"></div>
+              <div id="previewGrid" class="cc-preview-grid" hidden></div>
+              <div id="previewScene" class="cc-preview-scene"></div>
+              <div class="cc-canvas-label"><span id="sourceResolution">1920 × 1080</span><span id="sourceUse">OBS Browser Source</span></div>
+            </div>
+          </div>
+
+          <div class="cc-preview-bottom">
+            <div class="cc-worth-card">
+              <span class="cc-kicker">VIEWER GETS</span>
+              <b id="worthHeadline">A spoken message that lands on stream</b>
+              <div id="worthTags" class="cc-worth-tags"></div>
+            </div>
+            <div class="cc-preview-cta">
+              <span id="previewHint">Bottom Center · Standard</span>
+              <button id="resetTypeBtn">Reset type</button>
+            </div>
+          </div>
         </section>
 
-        <section class="tab-panel" data-panel="appearance">
-          <div class="panel-kicker">APPEARANCE</div>
-          <h3>Style this donation type.</h3>
-          <div class="field-grid two">
-            <label>Accent<input id="accentColor" type="color"></label>
-            <label>Text<input id="textColor" type="color"></label>
-            <label>Card<input id="cardColor" type="color"></label>
-            <label>Border<input id="borderColor" type="color"></label>
-          </div>
-          <label>Corner radius<input id="cornerRadius" type="range" min="0" max="64" step="2"><span id="cornerRadiusOut" class="range-out"></span></label>
-          <label>Card opacity<input id="cardOpacity" type="range" min="0" max="1" step="0.05"><span id="cardOpacityOut" class="range-out"></span></label>
-          <label class="switch-row"><span><b>Show icon</b><small>Display the donation type icon.</small></span><input id="showIcon" type="checkbox"></label>
-          <label class="switch-row"><span><b>Show amount</b><small>Display the paid amount.</small></span><input id="showAmount" type="checkbox"></label>
-          <label class="switch-row"><span><b>Show viewer name</b><small>Display sender name / Anonymous.</small></span><input id="showName" type="checkbox"></label>
-          <label class="switch-row"><span><b>Show message</b><small>Display the viewer's message.</small></span><input id="showMessage" type="checkbox"></label>
-        </section>
+        <aside class="cc-inspector">
+          <div class="cc-panel-head compact"><div><span class="cc-kicker">QUICK SETUP</span><h2>Configure the interaction</h2></div><span id="typeStateBadge" class="cc-status-badge">LIVE</span></div>
 
-        <section class="tab-panel" data-panel="content">
-          <div class="panel-kicker">CONTENT</div>
-          <h3>What viewers see.</h3>
-          <label>Public name<input id="publicName"></label>
-          <label>Short description<textarea id="typeDescription" rows="3"></textarea></label>
-          <div class="field-grid two">
-            <label>Icon<input id="typeIcon" maxlength="4"></label>
-            <label>Label<input id="typeLabel"></label>
+          <div class="cc-tabs" id="configTabs">
+            <button class="active" data-tab="quick">Quick</button>
+            <button data-tab="design">Design</button>
+            <button data-tab="media">Media & TTS</button>
+            <button data-tab="rules">Rules</button>
           </div>
-          <div class="field-grid two">
-            <label>Price / minimum<input id="typePrice" type="number" min="0" step="50"></label>
-            <label>Pricing<select id="pricingMode"><option value="minimum">Minimum amount</option><option value="fixed">Fixed price</option><option value="free">No payment / event only</option></select></label>
-          </div>
-          <label class="switch-row"><span><b>Available to viewers</b><small>Controls whether this type is active.</small></span><input id="typeEnabled" type="checkbox"></label>
-        </section>
 
-        <section class="tab-panel" data-panel="audio">
-          <div class="panel-kicker">TTS & AUDIO</div>
-          <h3>Sound behavior for this type.</h3>
-          <label class="switch-row"><span><b>Allow TTS</b><small>Viewer message can be spoken on stream.</small></span><input id="ttsEnabled" type="checkbox"></label>
-          <label>Default TTS voice<select id="ttsVoice"></select></label>
-          <label>Scene sound URL<input id="soundUrl" placeholder="https://.../alert.mp3"></label>
-          <label>Media / video URL<input id="mediaUrl" placeholder="https://.../drop.webm"></label>
-          <label>Sound volume<input id="soundVolume" type="range" min="0" max="1" step="0.05"><span id="soundVolumeOut" class="range-out"></span></label>
-        </section>
+          <section class="tab-panel active" data-panel="quick">
+            <div class="cc-field-block"><label>Stream impact</label><div id="impactChoices" class="cc-impact-grid"></div></div>
+            <div class="cc-field-block"><label>Position</label><div id="placementGrid" class="cc-placement-grid"></div></div>
+            <div class="cc-field-block"><label>Size</label><div id="sizeChoices" class="cc-segmented"></div></div>
+            <label class="cc-switch"><span><b>Keep inside safe area</b><small>Avoid facecam, game HUD and chat.</small></span><input id="safePlacement" type="checkbox" checked></label>
+          </section>
 
-        <section class="tab-panel" data-panel="timing">
-          <div class="panel-kicker">ANIMATION</div>
-          <h3>How it enters and leaves.</h3>
-          <label>Enter animation<select id="enterAnimation"><option value="fade">Fade</option><option value="pop">Pop</option><option value="slide-up">Slide up</option><option value="slide-left">Slide left</option><option value="bounce">Bounce</option><option value="none">None</option></select></label>
-          <label>Exit animation<select id="exitAnimation"><option value="fade">Fade</option><option value="shrink">Shrink</option><option value="slide-down">Slide down</option><option value="none">None</option></select></label>
-          <label>Animation speed<input id="animationMs" type="range" min="100" max="1500" step="50"><span id="animationMsOut" class="range-out"></span></label>
-          <label>On-screen duration<input id="durationMs" type="range" min="1500" max="15000" step="250"><span id="durationMsOut" class="range-out"></span></label>
-        </section>
-      </aside>
-    </div>
+          <section class="tab-panel" data-panel="design">
+            <div class="cc-field-block"><label>Alert style</label><div id="stylePresets" class="cc-style-presets"></div></div>
+            <div class="cc-color-grid">
+              <label>Accent<input id="accentColor" type="color"></label>
+              <label>Text<input id="textColor" type="color"></label>
+              <label>Card<input id="cardColor" type="color"></label>
+              <label>Border<input id="borderColor" type="color"></label>
+            </div>
+            <label class="cc-range">Roundness <input id="cornerRadius" type="range" min="0" max="64" step="2"><output id="cornerRadiusOut"></output></label>
+            <label class="cc-range">Card opacity <input id="cardOpacity" type="range" min="0" max="1" step="0.05"><output id="cardOpacityOut"></output></label>
+            <div class="cc-visibility-grid">
+              <label><input id="showIcon" type="checkbox"> Icon</label>
+              <label><input id="showAmount" type="checkbox"> Amount</label>
+              <label><input id="showName" type="checkbox"> Viewer</label>
+              <label><input id="showMessage" type="checkbox"> Message</label>
+            </div>
+          </section>
+
+          <section class="tab-panel" data-panel="media">
+            <label class="cc-switch"><span><b>Text-to-speech</b><small>Read viewer message aloud.</small></span><input id="ttsEnabled" type="checkbox"></label>
+            <label class="cc-stack">Default voice<select id="ttsVoice"></select></label>
+            <label class="cc-stack">Media / video URL<input id="mediaUrl" placeholder="https://.../drop.webm"></label>
+            <label class="cc-stack">Scene sound URL<input id="soundUrl" placeholder="https://.../alert.mp3"></label>
+            <label class="cc-range">Sound volume<input id="soundVolume" type="range" min="0" max="1" step="0.05"><output id="soundVolumeOut"></output></label>
+            <div class="cc-media-note">Tip: use a short transparent WebM for premium drops. Keep loud sounds below 90% so TTS stays understandable.</div>
+          </section>
+
+          <section class="tab-panel" data-panel="rules">
+            <label class="cc-stack">Public name<input id="publicName"></label>
+            <label class="cc-stack">Viewer-facing description<textarea id="typeDescription" rows="3"></textarea></label>
+            <div class="cc-two-col"><label>Icon<input id="typeIcon" maxlength="4"></label><label>Alert label<input id="typeLabel"></label></div>
+            <div class="cc-two-col"><label>Price / minimum<input id="typePrice" type="number" min="0" step="50"></label><label>Pricing<select id="pricingMode"><option value="minimum">Minimum amount</option><option value="fixed">Fixed price</option><option value="free">Event only</option></select></label></div>
+            <div class="cc-two-col"><label>Daily stock<input id="dailyStock" type="number" min="0" step="1" placeholder="0 = unlimited"></label><label>Cooldown (sec)<input id="cooldownSec" type="number" min="0" step="5"></label></div>
+            <label class="cc-switch"><span><b>Available to viewers</b><small>Turn this interaction on or off.</small></span><input id="typeEnabled" type="checkbox"></label>
+            <label class="cc-stack">Enter animation<select id="enterAnimation"><option value="fade">Fade</option><option value="pop">Pop</option><option value="slide-up">Slide up</option><option value="slide-left">Slide left</option><option value="bounce">Bounce</option><option value="none">None</option></select></label>
+            <label class="cc-stack">Exit animation<select id="exitAnimation"><option value="fade">Fade</option><option value="shrink">Shrink</option><option value="slide-down">Slide down</option><option value="none">None</option></select></label>
+            <label class="cc-range">Animation speed<input id="animationMs" type="range" min="100" max="1500" step="50"><output id="animationMsOut"></output></label>
+            <label class="cc-range">On-screen duration<input id="durationMs" type="range" min="1500" max="15000" step="250"><output id="durationMsOut"></output></label>
+          </section>
+        </aside>
+      </section>
+    </main>
   </section>
-</main>
+</div>
 
-<dialog id="addTypeDialog" class="sc-dialog">
+<dialog id="addTypeDialog" class="cc-dialog">
   <form method="dialog" id="addTypeForm">
-    <div class="panel-kicker">NEW DONATION TYPE</div>
-    <h2>Add another viewer interaction</h2>
-    <p>Start from a template. You can customise it immediately after creation.</p>
-    <div class="template-grid" id="templateGrid"></div>
-    <label>Name<input id="newTypeName" required placeholder="Sound Alert"></label>
-    <div class="field-grid two">
-      <label>Icon<input id="newTypeIcon" value="🔊"></label>
+    <div class="cc-dialog-head"><div><span class="cc-kicker">NEW INTERACTION</span><h2>What should viewers be able to buy?</h2><p>Pick a ready-made interaction. You can customise everything after creating it.</p></div><button value="cancel" class="cc-close">×</button></div>
+    <div id="templateGrid" class="cc-template-grid"></div>
+    <div class="cc-dialog-form">
+      <label>Name<input id="newTypeName" required placeholder="Jumpscare"></label>
+      <label>Icon<input id="newTypeIcon" value="👻"></label>
       <label>Starting price<input id="newTypePrice" type="number" value="500"></label>
     </div>
-    <div class="dialog-actions"><button value="cancel">Cancel</button><button id="createTypeBtn" value="default" class="primary">Create type</button></div>
+    <div class="cc-dialog-actions"><button value="cancel">Cancel</button><button id="createTypeBtn" value="default" class="cc-btn primary">Create interaction</button></div>
   </form>
 </dialog>
 
-<div id="scToast" class="sc-toast">Saved.</div>
+<div id="scToast" class="cc-toast">Saved.</div>
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="realtime-preview.js"></script>
