@@ -249,10 +249,10 @@ async function sendIntegratedDemo(type){
     const amount=currentSupportAmount(); const msg=qs('#message').value.trim(); const name=qs('#donorName').value.trim()||'Anonymous';
     if(amount<cfg.minTip)return demoNotice(`Minimum support is ${money(cfg.minTip)}.`); const err=validateMessage(msg); if(err)return demoNotice(err);
     const tts=cfg.tts.enabled&&amount>=cfg.tts.minAmount&&qs('#ttsEnabled').checked&&!!msg;
-    event={type:'support',name,amount,currency:cfg.currency,message:msg,tts,title:'Support',voiceProfile:selectedVoice('#supportVoice')};
+    { const vp=voiceProfiles().find(v=>v.id===selectedVoice('#supportVoice'))||{}; event={type:'support',name,amount,currency:cfg.currency,message:msg,tts,title:'Support',voiceProfile:vp.id||selectedVoice('#supportVoice'),ttsProvider:vp.provider||'browser',ttsVoiceId:vp.voiceId||'',ttsModel:vp.model||''}; }
   } else if(type==='drop'){
     if(!selectedDrop)return demoNotice('Choose a Rare Drop first.'); const msg=qs('#dropMessage').value.trim(); const err=validateMessage(msg);if(err)return demoNotice(err);
-    event={type:'drop',name:qs('#dropDonorName').value.trim()||'Anonymous',amount:selectedDrop.price,currency:cfg.currency,message:msg,tts:selectedDrop.ttsIncluded&&!!msg,title:selectedDrop.name,rarity:selectedDrop.rarity,icon:selectedDrop.icon,assetUrl:selectedDrop.assetUrl||'',soundUrl:selectedDrop.soundUrl||'',voiceProfile:selectedVoice('#dropVoice')};
+    { const vp=voiceProfiles().find(v=>v.id===selectedVoice('#dropVoice'))||{}; event={type:'drop',name:qs('#dropDonorName').value.trim()||'Anonymous',amount:selectedDrop.price,currency:cfg.currency,message:msg,tts:selectedDrop.ttsIncluded&&!!msg,title:selectedDrop.name,rarity:selectedDrop.rarity,icon:selectedDrop.icon,assetUrl:selectedDrop.assetUrl||'',soundUrl:selectedDrop.soundUrl||'',voiceProfile:vp.id||selectedVoice('#dropVoice'),ttsProvider:vp.provider||'browser',ttsVoiceId:vp.voiceId||'',ttsModel:vp.model||''}; }
   } else {
     if(!selectedChallenge)return demoNotice('Choose a Challenge first.'); const note=qs('#challengeNote').value.trim();const err=validateMessage(note);if(err)return demoNotice(err);
     event={type:'challenge',name:qs('#challengeDonorName').value.trim()||'Anonymous',amount:selectedChallenge.price,currency:cfg.currency,message:note,tts:false,title:selectedChallenge.title,icon:selectedChallenge.icon};

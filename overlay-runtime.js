@@ -18,9 +18,10 @@ function voiceForProfile(profile,lang){const voices=speechSynthesis.getVoices();
 async function speak(event,done){
   if(!event.tts||!event.message)return done();
   const profile=ttsProfile(event.voiceProfile);
+  const provider=event.ttsProvider||profile.provider||'browser';
   const spokenText=`${event.name||'Anonymous'} says: ${event.message}`;
 
-  if(profile.provider==='elevenlabs'){
+  if(provider==='elevenlabs'){
     try{
       const response=await fetch(cfg.tts.apiEndpoint||'/api/tts',{
         method:'POST',
@@ -38,7 +39,9 @@ async function speak(event,done){
       await audio.play();
       return;
     }catch(error){
-      console.error('ElevenLabs playback failed; using browser fallback.',error);
+      console.error('ElevenLabs playback failed in OBS overlay.',error);
+      document.documentElement.dataset.ttsError='elevenlabs';
+      return done();
     }
   }
 

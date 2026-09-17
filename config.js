@@ -1,4 +1,5 @@
 window.STREAM_CONFIG = {
+  buildVersion: "5.1.0",
   brand: "MY STREAM",
   creatorName: "Your Stream Name",
   handle: "@yourhandle",
