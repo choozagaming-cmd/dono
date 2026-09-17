@@ -15,7 +15,40 @@ function looksUrduScript(text){return /[\u0600-\u06FF]/.test(text||'');}
 function looksRomanUrdu(text){const words=(text||'').toLowerCase().match(/[a-z]+/g)||[];const hits=new Set(['aap','ap','main','mein','mai','hum','tum','tumhara','tumhari','mera','meri','mere','kya','kyun','kaise','kaisay','hai','hain','ho','hoon','tha','thi','the','acha','accha','bohat','bahut','bht','nahi','nai','nahin','kar','karo','karna','raha','rahi','rahe','jao','ao','aao','dekho','bhai','yaar','jan','jaan','mujhe','muje','tujhe','usko','isko','wala','wali','wese','waise','phir','abhi','aj','aaj','kal','shukriya','mubarak','allah','inshallah','mashallah']);let n=0;for(const w of words)if(hits.has(w))n++;return n>=2||(n>=1&&words.length<=5);}
 function desiredLang(text,profile){if(looksUrduScript(text))return 'ur-PK';if(looksRomanUrdu(text))return (profile.langs||[]).find(x=>x==='en-IN')||(profile.langs||[])[0]||'en-IN';return (profile.langs||[]).find(x=>x.startsWith('en'))||(profile.langs||[])[0]||'en-GB';}
 function voiceForProfile(profile,lang){const voices=speechSynthesis.getVoices();if(!voices.length)return null;const female=(profile.gender||'').toLowerCase()==='female';const male=(profile.gender||'').toLowerCase()==='male';const femaleNames=/uzma|neerja|heera|sonia|hazel|zira|susan|aria|jenny|samantha|victoria|female/i;const maleNames=/asad|ravi|george|david|mark|guy|ryan|male/i;const genderScore=v=>female?(femaleNames.test(v.name)?4:maleNames.test(v.name)?-2:0):male?(maleNames.test(v.name)?4:femaleNames.test(v.name)?-2:0):0;const langScore=v=>{const vl=(v.lang||'').toLowerCase(),dl=(lang||'').toLowerCase();if(vl===dl)return 8;if(vl.split('-')[0]===dl.split('-')[0])return 5;if((profile.langs||[]).some(x=>vl===x.toLowerCase()))return 3;return 0;};return voices.slice().sort((x,y)=>(langScore(y)+genderScore(y))-(langScore(x)+genderScore(x)))[0]||voices[0];}
-function speak(event,done){if(!event.tts||!event.message||!('speechSynthesis'in window))return done();const profile=ttsProfile(event.voiceProfile);const lang=desiredLang(event.message,profile);const u=new SpeechSynthesisUtterance(`${event.name||'Anonymous'} says: ${event.message}`);u.lang=lang;u.rate=Number(profile.rate||cfg.tts.rate||1);u.pitch=Number(profile.pitch||cfg.tts.pitch||1);u.volume=Number(cfg.tts.volume||1);const v=voiceForProfile(profile,lang);if(v)u.voice=v;u.onend=done;u.onerror=done;speechSynthesis.speak(u);}
+async function speak(event,done){
+  if(!event.tts||!event.message)return done();
+  const profile=ttsProfile(event.voiceProfile);
+  const spokenText=`${event.name||'Anonymous'} says: ${event.message}`;
+
+  if(profile.provider==='elevenlabs'){
+    try{
+      const response=await fetch(cfg.tts.apiEndpoint||'/api/tts',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({text:spokenText,voice:profile.id})
+      });
+      if(!response.ok)throw new Error(`TTS ${response.status}`);
+      const blob=await response.blob();
+      const url=URL.createObjectURL(blob);
+      const audio=new Audio(url);
+      audio.volume=Number(cfg.tts.volume||1);
+      const finish=()=>{URL.revokeObjectURL(url);done();};
+      audio.onended=finish;
+      audio.onerror=finish;
+      await audio.play();
+      return;
+    }catch(error){
+      console.error('ElevenLabs playback failed; using browser fallback.',error);
+    }
+  }
+
+  if(!('speechSynthesis'in window))return done();
+  const lang=desiredLang(event.message,profile);
+  const u=new SpeechSynthesisUtterance(spokenText);
+  u.lang=lang;u.rate=Number(profile.rate||cfg.tts.rate||1);u.pitch=Number(profile.pitch||cfg.tts.pitch||1);u.volume=Number(cfg.tts.volume||1);
+  const v=voiceForProfile(profile,lang);if(v)u.voice=v;u.onend=done;u.onerror=done;speechSynthesis.speak(u);
+}
+
 function playSound(event,scene){const url=event.soundUrl||scene?.soundUrl;if(!url)return;try{const a=new Audio(url);a.volume=.88;a.play().catch(()=>{});}catch(_){}}
 function animateIn(nodes,sc){nodes.forEach(({n,el},i)=>{const ms=Number(el.animationMs||500);n.animate(animFrames(el.enterAnimation||'fade',el.rotation||0,false),{duration:ms,delay:i*18,easing:'cubic-bezier(.2,.8,.2,1)',fill:'both'});});}
 function animateOut(nodes,done){if(!nodes.length)return done();let longest=0;nodes.forEach(({n,el})=>{const ms=Number(el.animationMs||450);longest=Math.max(longest,ms);n.animate(animFrames(el.exitAnimation||'fade',el.rotation||0,true),{duration:ms,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'});});setTimeout(done,longest+30);}

@@ -32,18 +32,19 @@ window.STREAM_CONFIG = {
     minAmount: 500,
     maxChars: 180,
     defaultOn: true,
-    defaultVoice: "pak-female",
+    defaultVoice: "serafina",
     languageMode: "auto-roman-urdu-english",
-    provider: "browser", // Browser fallback now; switch to server TTS later without changing events.
+    provider: "elevenlabs",
+    apiEndpoint: "/api/tts",
+    model: "eleven_v3",
     voices: [
-      { id: "pak-female", name: "Ayla", gender: "female", style: "Natural Pakistani", langs: ["en-IN","ur-PK","en-GB"], rate: 0.98, pitch: 1.02 },
-      { id: "pak-male", name: "Rayyan", gender: "male", style: "Natural Pakistani", langs: ["en-IN","ur-PK","en-GB"], rate: 0.97, pitch: 0.94 },
-      { id: "clear-female", name: "Nova", gender: "female", style: "Clear & energetic", langs: ["en-GB","en-IN"], rate: 1.04, pitch: 1.05 },
-      { id: "clear-male", name: "Atlas", gender: "male", style: "Clear & energetic", langs: ["en-GB","en-IN"], rate: 1.03, pitch: 0.96 },
-      { id: "velvet-female", name: "Velvet Female", gender: "female", style: "Seductive · warm · intimate", langs: ["en-IN","en-GB","ur-PK"], rate: 0.88, pitch: 1.00 },
-      { id: "velvet-male", name: "Velvet Male", gender: "male", style: "Seductive · deep · intimate", langs: ["en-IN","en-GB","ur-PK"], rate: 0.86, pitch: 0.86 }
-    ],
-    rate: 1,
+      { id: "serafina", name: "Serafina", gender: "female", style: "Sensual Temptress · ElevenLabs", provider: "elevenlabs", voiceId: "4tRn1lSkEn13EVTuqb0g", model: "eleven_v3", rate: 0.94, pitch: 1.0 },
+      { id: "pak-female", name: "Ayla", gender: "female", style: "Natural Pakistani · browser fallback", provider: "browser", langs: ["en-IN","ur-PK","en-GB"], rate: 0.98, pitch: 1.02 },
+      { id: "pak-male", name: "Rayyan", gender: "male", style: "Natural Pakistani · browser fallback", provider: "browser", langs: ["en-IN","ur-PK","en-GB"], rate: 0.97, pitch: 0.94 },
+      { id: "clear-female", name: "Nova", gender: "female", style: "Clear & energetic · browser fallback", provider: "browser", langs: ["en-GB","en-IN"], rate: 1.04, pitch: 1.05 },
+      { id: "clear-male", name: "Atlas", gender: "male", style: "Clear & energetic · browser fallback", provider: "browser", langs: ["en-GB","en-IN"], rate: 1.03, pitch: 0.96 },
+      { id: "velvet-male", name: "Velvet Male", gender: "male", style: "Deep & intimate · browser fallback", provider: "browser", langs: ["en-IN","en-GB","ur-PK"], rate: 0.86, pitch: 0.86 }
+    ],    rate: 1,
     pitch: 1,
     volume: 1
   },

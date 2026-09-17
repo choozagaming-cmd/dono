@@ -110,20 +110,48 @@ function paymentNotConnected() {
   demoNotice('Payments are not connected yet. Use “Try this alert in OBS” to test the exact interaction.');
 }
 
-function previewVoice(selectId, text) {
+async function previewVoice(selectId, text) {
+  const id = selectedVoice(selectId);
+  const profile = voiceProfiles().find(v => v.id === id) || voiceProfiles()[0] || {};
+  const sample = (text || '').trim() || 'Assalam o alaikum yaar, welcome to the stream. This is a mixed Roman Urdu and English TTS test.';
+
+  if (profile.provider === 'elevenlabs') {
+    try {
+      demoNotice('Generating ElevenLabs preview…');
+      const response = await fetch(cfg.tts.apiEndpoint || '/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: sample, voice: profile.id })
+      });
+      if (!response.ok) {
+        const info = await response.json().catch(() => ({}));
+        throw new Error(info.error || 'TTS preview failed');
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audio.volume = Number(cfg.tts.volume || 1);
+      audio.onended = () => URL.revokeObjectURL(url);
+      audio.onerror = () => URL.revokeObjectURL(url);
+      await audio.play();
+      return;
+    } catch (error) {
+      console.error(error);
+      return demoNotice(error.message || 'Could not preview the ElevenLabs voice.');
+    }
+  }
+
   if (!('speechSynthesis' in window)) return demoNotice('Voice preview is not supported in this browser.');
   speechSynthesis.cancel();
-  const id=selectedVoice(selectId), profile=voiceProfiles().find(v=>v.id===id)||voiceProfiles()[0]||{};
-  const sample=(text||'').trim() || 'Assalam o alaikum yaar, welcome to the stream. This is a mixed Roman Urdu and English TTS test.';
-  const u=new SpeechSynthesisUtterance(sample);
-  const roman=/\b(aap|main|mein|kya|hai|ho|yaar|bhai|bohat|nahi|kar|raha|rahi|shukriya|assalam)\b/i.test(sample);
-  u.lang=roman?'en-IN':((profile.langs||[]).find(x=>x.startsWith('en'))||'en-GB');
-  u.rate=Number(profile.rate||1);u.pitch=Number(profile.pitch||1);u.volume=Number(cfg.tts.volume||1);
-  const voices=speechSynthesis.getVoices(); const preferred=(profile.langs||[]).map(x=>x.toLowerCase());
-  const female=/female/i.test(profile.gender||''), male=/male/i.test(profile.gender||'');
-  const fn=/uzma|neerja|heera|sonia|hazel|zira|susan|aria|jenny|samantha|victoria/i, mn=/asad|ravi|george|david|mark|guy|ryan/i;
-  const scored=voices.map(v=>{let z=0,vl=(v.lang||'').toLowerCase();if(preferred.includes(vl))z+=8;else if(preferred.some(x=>x.split('-')[0]===vl.split('-')[0]))z+=4;if(female&&fn.test(v.name))z+=3;if(male&&mn.test(v.name))z+=3;return [z,v]}).sort((a,b)=>b[0]-a[0]);
-  if(scored[0])u.voice=scored[0][1];speechSynthesis.speak(u);
+  const u = new SpeechSynthesisUtterance(sample);
+  const roman = /\b(aap|main|mein|kya|hai|ho|yaar|bhai|bohat|nahi|kar|raha|rahi|shukriya|assalam)\b/i.test(sample);
+  u.lang = roman ? 'en-IN' : ((profile.langs || []).find(x => x.startsWith('en')) || 'en-GB');
+  u.rate = Number(profile.rate || 1); u.pitch = Number(profile.pitch || 1); u.volume = Number(cfg.tts.volume || 1);
+  const voices = speechSynthesis.getVoices(); const preferred = (profile.langs || []).map(x => x.toLowerCase());
+  const female = /female/i.test(profile.gender || ''), male = /male/i.test(profile.gender || '');
+  const fn = /uzma|neerja|heera|sonia|hazel|zira|susan|aria|jenny|samantha|victoria/i, mn = /asad|ravi|george|david|mark|guy|ryan/i;
+  const scored = voices.map(v => { let z = 0, vl = (v.lang || '').toLowerCase(); if (preferred.includes(vl)) z += 8; else if (preferred.some(x => x.split('-')[0] === vl.split('-')[0])) z += 4; if (female && fn.test(v.name)) z += 3; if (male && mn.test(v.name)) z += 3; return [z, v]; }).sort((a, b) => b[0] - a[0]);
+  if (scored[0]) u.voice = scored[0][1]; speechSynthesis.speak(u);
 }
 
 function initSupport() {
