@@ -2,8 +2,14 @@ const api = window.StreamOverlayLayout;
 const $ = (id) => document.getElementById(id);
 const clamp = (n,min,max)=>Math.min(max,Math.max(min,n));
 const deep = (v)=>JSON.parse(JSON.stringify(v));
-let layout = api.load();
-let sceneKey = layout.activeScene || 'support';
+const editorQuery = new URLSearchParams(location.search);
+const editorProfile = editorQuery.get('profile') || 'landscape-1080';
+const PROFILE_LAYOUTS_KEY='streamnest:studioProfileLayouts:v1';
+function loadEditorLayout(){try{const all=JSON.parse(localStorage.getItem(PROFILE_LAYOUTS_KEY)||'{}');if(all[editorProfile])return all[editorProfile];}catch(_){}return api.load();}
+function saveEditorLayout(){try{const all=JSON.parse(localStorage.getItem(PROFILE_LAYOUTS_KEY)||'{}');all[editorProfile]=layout;localStorage.setItem(PROFILE_LAYOUTS_KEY,JSON.stringify(all));}catch(_){}if(editorProfile==='landscape-1080')api.save(layout);}
+function scaledDefaults(w,h){const out=deep(window.STREAM_OVERLAY_DEFAULTS);const sx=w/out.canvas.width,sy=h/out.canvas.height;out.canvas={width:w,height:h};Object.values(out.scenes||{}).forEach(sc=>sc.elements?.forEach(el=>{el.x*=sx;el.y*=sy;el.w*=sx;el.h*=sy;el.fontSize=(el.fontSize||24)*Math.min(sx,sy);el.borderRadius=(el.borderRadius||0)*Math.min(sx,sy);el.padding=(el.padding||0)*Math.min(sx,sy);}));return out;}
+let layout = loadEditorLayout();
+let sceneKey = editorQuery.get('scene') || layout.activeScene || 'support';
 let selectedId = null;
 let mode = null;
 let stageScale = .5;
@@ -78,7 +84,7 @@ snapshot(true);
 
 function getSavedRealtime(){try{return JSON.parse(localStorage.getItem('streamnest:realtimeConfig')||'{}')}catch(_){return{}}}
 function buildObsUrl(values=getSavedRealtime()){
-  const base=new URL('overlay.html',location.href);base.searchParams.set('obs','1');
+  const base=new URL('overlay.html',location.href);base.searchParams.set('obs','1');base.searchParams.set('profile',editorProfile);base.searchParams.set('v',window.STREAM_CONFIG?.buildVersion||'7');
   if(values.supabaseUrl)base.searchParams.set('sbUrl',values.supabaseUrl);
   if(values.publishableKey)base.searchParams.set('sbKey',values.publishableKey);
   if(values.channel)base.searchParams.set('channel',values.channel);
@@ -97,7 +103,7 @@ function populateTestForm(){
   if(sceneKey==='drop'){$('testName').value='Hamza';$('testAmount').value=10000;$('testTitle').value='Crown Drop';$('testMessage').value='Crown Drop incoming!';$('testTts').checked=true;}
   if(sceneKey==='challenge'){$('testName').value='Ali';$('testAmount').value=2500;$('testTitle').value='Viewer Picks My Loadout';$('testMessage').value='Shotgun-only next round.';$('testTts').checked=false;}
 }
-async function sendCurrentSceneToOverlay(){api.save(layout);const btn=$('testInObs');btn.disabled=true;btn.textContent='Sending…';try{const result=await window.StreamPreviewTransport.send({kind:'studio-preview',event:testEvent(),layout:deep(layout)});setStatus(result.cloud?'Sent to browser + OBS Realtime.':'Sent to browser preview. Configure Supabase for OBS-app testing.',result.cloud?'success':'warn');}catch(e){setStatus(`Preview failed: ${e.message||e}`,'error')}finally{btn.disabled=false;btn.textContent='📺 Test current scene in OBS'}}
+async function sendCurrentSceneToOverlay(){saveEditorLayout();const btn=$('testInObs');btn.disabled=true;btn.textContent='Sending…';try{const result=await window.StreamPreviewTransport.send({kind:'studio-preview',profile:editorProfile,event:{...testEvent(),sceneKey},layout:deep(layout)});setStatus(result.cloud?'Sent to browser + OBS Realtime.':'Sent to browser preview. Configure Supabase for OBS-app testing.',result.cloud?'success':'warn');}catch(e){setStatus(`Preview failed: ${e.message||e}`,'error')}finally{btn.disabled=false;btn.textContent='📺 Test current scene in OBS'}}
 
 function eventData(){
   const e=testEvent(),money=`${window.STREAM_CONFIG?.currencyLabel||'Rs'} ${Number(e.amount||0).toLocaleString()}`;
@@ -150,7 +156,7 @@ function renderLayers(){const box=$('layerList');box.innerHTML='';scene().elemen
 function renderSceneSettings(){$('sceneDuration').value=scene().durationMs||5500;$('sceneSound').value=scene().soundUrl||'';$('sceneBg').value=scene().background||'#000000';}
 function renderInspector(){const el=getEl();$('emptyInspector').hidden=!!el;$('inspector').hidden=!el;if(!el)return;$('selectedLabel').textContent=el.id;$('selectedType').textContent=`${el.type}${el.role?` · ${el.role}`:''}`;$('lockEl').textContent=el.locked?'🔒':'🔓';$('hideEl').textContent=el.visible===false?'🙈':'👁';const vals={pId:el.id,pRole:el.role||'',pText:el.text||'',pSrc:el.src||'',pX:Math.round(el.x),pY:Math.round(el.y),pW:Math.round(el.w),pH:Math.round(el.h),pRotate:Math.round(el.rotation||0),pOpacity:el.opacity??1,pRadius:el.borderRadius||0,pFont:el.fontSize||24,pWeight:el.fontWeight||700,pColor:toHex(el.color,'#ffffff'),pBg:toHex(el.background,'#000000'),pBorder:toHex(el.borderColor,'#333333'),pBorderW:el.borderWidth||0,pAlign:el.align||'left',pEnter:el.enterAnimation||'none',pExit:el.exitAnimation||'none',pAnimMs:el.animationMs??500,pFit:el.objectFit||'contain'};for(const [id,val] of Object.entries(vals)){if($(id))$(id).value=val}}
 function renderInspectorAndLayers(){renderStageOnly();renderLayers();renderInspector();}
-function render(){normalizeLayout();$('sceneName').textContent=scene().name;renderScenes();renderStageOnly();renderLayers();renderInspector();renderSceneSettings();setZoom(zoomMode);}
+function render(){normalizeLayout();$('sceneName').textContent=scene().name;if($('canvasSize'))$('canvasSize').textContent=`${layout.canvas.width}×${layout.canvas.height}`;renderScenes();renderStageOnly();renderLayers();renderInspector();renderSceneSettings();setZoom(zoomMode);}
 function toHex(v,fallback){if(!v||v==='transparent'||v.startsWith('rgba'))return fallback;const m=v.match(/^#([0-9a-f]{6})$/i);return m?v:fallback;}
 
 function startMove(e,el){if(e.button!==0||el.locked)return;if(e.target.dataset.resize||e.target.classList.contains('rotate-handle'))return;e.stopPropagation();selectedId=el.id;const p=stagePoint(e);mode={type:'move',el,start:p,x:el.x,y:el.y,moved:false};e.currentTarget.setPointerCapture?.(e.pointerId);renderInspectorAndLayers();}
@@ -235,7 +241,7 @@ $('assetUpload').addEventListener('change',async e=>{
 $('addAssetUrl').onclick=()=>{$('assetUrlName').value='';$('assetUrlValue').value='';$('assetUrlDialog').showModal()};$('assetUrlForm').addEventListener('submit',e=>{if(e.submitter?.value==='cancel')return;const name=$('assetUrlName').value.trim(),url=$('assetUrlValue').value.trim();if(!name||!url){e.preventDefault();return}urlAssets.push({id:uniqueId('asset'),name,url,kind:assetKind(url),session:false});localStorage.setItem('streamnest:urlAssets',JSON.stringify(urlAssets));renderAssets();setStatus('URL asset added.','success')});
 stageWrap.addEventListener('dragover',e=>e.preventDefault());stageWrap.addEventListener('drop',e=>{e.preventDefault();let asset;try{asset=JSON.parse(e.dataTransfer.getData('application/json'))}catch(_){return}if(!asset)return;if(asset.kind==='audio'){scene().soundUrl=asset.url;$('sceneSound').value=asset.url;snapshot();return}const p=stagePoint(e);addElement('media',{x:p.x-180,y:p.y-110,w:360,h:220,src:asset.url,text:asset.name,objectFit:'contain'})});
 
-$('saveLayout').onclick=()=>{api.save(layout);setStatus('Layout saved in this browser.','success')};$('resetLayout').onclick=()=>{layout=deep(window.STREAM_OVERLAY_DEFAULTS);normalizeLayout();sceneKey=layout.activeScene||'support';selectedId=null;snapshot();populateTestForm();render();setStatus('Default layout restored. Save to keep it.','warn')};$('undoBtn').onclick=undo;$('redoBtn').onclick=redo;
+$('saveLayout').onclick=()=>{saveEditorLayout();setStatus(`Layout saved for ${editorProfile}.`,'success')};$('resetLayout').onclick=()=>{const sizes={'landscape-1080':[1920,1080],'landscape-2k':[2560,1440],'vertical-short':[1080,1920]};const [w,h]=sizes[editorProfile]||[1920,1080];layout=scaledDefaults(w,h);normalizeLayout();sceneKey=layout.scenes[sceneKey]?sceneKey:(layout.activeScene||'support');selectedId=null;snapshot();populateTestForm();render();setStatus('Default layout restored for this source. Save to keep it.','warn')};$('undoBtn').onclick=undo;$('redoBtn').onclick=redo;
 $('testInObs').onclick=sendCurrentSceneToOverlay;$('saveRealtime').onclick=saveRealtimeSettings;$('copyObsUrl').onclick=copyObsUrl;['sbUrl','sbKey','sbChannel'].forEach(id=>$(id).addEventListener('input',()=>{$('obsUrl').value=buildObsUrl({supabaseUrl:$('sbUrl').value.trim(),publishableKey:$('sbKey').value.trim(),channel:$('sbChannel').value.trim()})}));
 
 $('zoomSelect').addEventListener('change',e=>setZoom(e.target.value));$('zoomIn').onclick=()=>adjustZoom(.1);$('zoomOut').onclick=()=>adjustZoom(-.1);

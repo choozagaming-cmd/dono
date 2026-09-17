@@ -1,3 +1,6 @@
+
+## V7 Stream Control Studio
+The viewer frontend is now treated as stable. Streamer-side setup lives at `stream-studio.html`, with 1080p, 2K, and vertical source profiles, nine placement presets, per-donation-type customization, custom donation types, OBS publishing, and an Advanced Canvas fallback. See `STREAM_STUDIO_V7.md`.
 # Personal Stream Interaction Tab
 
 This build is deliberately **not a creator platform**. It is one branded support page for one streamer, one private dashboard, and one OBS alert queue.

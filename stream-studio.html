@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Stream Control Studio</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="stream-studio.css">
+</head>
+<body class="sc-body">
+<header class="sc-topbar">
+  <div>
+    <div class="sc-eyebrow">STREAM-SIDE CONTROL STUDIO</div>
+    <h1>Build alerts as blocks, not loose pieces.</h1>
+    <p>Choose your stream source, donation type, placement and style. Use Advanced Canvas only when you want pixel-level control.</p>
+  </div>
+  <div class="sc-top-actions">
+    <a class="sc-btn" href="dashboard.html">Dashboard</a>
+    <button class="sc-btn" id="copyObsProfileBtn">⧉ Copy OBS source</button>
+    <button class="sc-btn" id="testObsBtn">📺 Test in OBS</button>
+    <button class="sc-btn" id="publishObsBtn">⇧ Publish layout to OBS</button>
+    <button class="sc-btn primary" id="saveStudioBtn">Save studio</button>
+  </div>
+</header>
+
+<main class="sc-shell">
+  <aside class="sc-sidebar">
+    <div class="sc-section-label">Source</div>
+    <div id="sourceProfiles" class="source-list"></div>
+
+    <div class="sc-section-label gap">Donation types</div>
+    <div id="donationTypes" class="type-list"></div>
+    <button id="addTypeBtn" class="sc-add-btn">＋ Add donation type</button>
+
+    <div class="sc-section-label gap">Tools</div>
+    <button id="openAdvancedBtn" class="sc-side-tool">⌖ Advanced Canvas</button>
+    <a href="overlay.html?obs=1" target="_blank" class="sc-side-tool">↗ Open overlay</a>
+    <a href="index.html" target="_blank" class="sc-side-tool">↗ Viewer page</a>
+  </aside>
+
+  <section class="sc-main">
+    <div class="source-head">
+      <div>
+        <span class="source-pill" id="sourcePill">1080p Landscape</span>
+        <h2 id="typeTitle">Support + TTS</h2>
+        <p id="typeSubtitle">Normal support with an optional spoken message.</p>
+      </div>
+      <div class="source-meta">
+        <b id="sourceResolution">1920 × 1080</b>
+        <span id="sourceUse">OBS Browser Source</span>
+      </div>
+    </div>
+
+    <div class="sc-tabs" id="configTabs">
+      <button class="active" data-tab="layout">Placement</button>
+      <button data-tab="appearance">Appearance</button>
+      <button data-tab="content">Content</button>
+      <button data-tab="audio">TTS & Audio</button>
+      <button data-tab="timing">Animation</button>
+    </div>
+
+    <div class="sc-workspace">
+      <div class="preview-column">
+        <div class="preview-toolbar">
+          <div><b>Stream preview</b><span id="previewHint">Placement preset: Bottom Center</span></div>
+          <div class="preview-tools">
+            <button id="safeAreaBtn" class="active">Safe area</button>
+            <button id="gridBtn">Grid</button>
+          </div>
+        </div>
+        <div id="previewViewport" class="preview-viewport">
+          <div id="previewStage" class="preview-stage">
+            <div id="safeArea" class="safe-area"></div>
+            <div id="previewGrid" class="preview-grid" hidden></div>
+            <div id="previewScene" class="preview-scene"></div>
+          </div>
+        </div>
+        <div class="preview-footer">
+          <span>What you see here is the whole alert group.</span>
+          <button id="resetTypeBtn">Reset this type</button>
+        </div>
+      </div>
+
+      <aside class="quick-panel">
+        <section class="tab-panel active" data-panel="layout">
+          <div class="panel-kicker">QUICK PLACEMENT</div>
+          <h3>Where should this alert appear?</h3>
+          <p class="panel-copy">Pick one position. The full alert moves together.</p>
+          <div id="placementGrid" class="placement-grid"></div>
+          <div class="field-group">
+            <label>Alert size</label>
+            <div id="sizeChoices" class="segmented"></div>
+          </div>
+          <label class="switch-row"><span><b>Keep inside safe area</b><small>Useful for facecam, chat and game HUDs.</small></span><input id="safePlacement" type="checkbox" checked></label>
+        </section>
+
+        <section class="tab-panel" data-panel="appearance">
+          <div class="panel-kicker">APPEARANCE</div>
+          <h3>Style this donation type.</h3>
+          <div class="field-grid two">
+            <label>Accent<input id="accentColor" type="color"></label>
+            <label>Text<input id="textColor" type="color"></label>
+            <label>Card<input id="cardColor" type="color"></label>
+            <label>Border<input id="borderColor" type="color"></label>
+          </div>
+          <label>Corner radius<input id="cornerRadius" type="range" min="0" max="64" step="2"><span id="cornerRadiusOut" class="range-out"></span></label>
+          <label>Card opacity<input id="cardOpacity" type="range" min="0" max="1" step="0.05"><span id="cardOpacityOut" class="range-out"></span></label>
+          <label class="switch-row"><span><b>Show icon</b><small>Display the donation type icon.</small></span><input id="showIcon" type="checkbox"></label>
+          <label class="switch-row"><span><b>Show amount</b><small>Display the paid amount.</small></span><input id="showAmount" type="checkbox"></label>
+          <label class="switch-row"><span><b>Show viewer name</b><small>Display sender name / Anonymous.</small></span><input id="showName" type="checkbox"></label>
+          <label class="switch-row"><span><b>Show message</b><small>Display the viewer's message.</small></span><input id="showMessage" type="checkbox"></label>
+        </section>
+
+        <section class="tab-panel" data-panel="content">
+          <div class="panel-kicker">CONTENT</div>
+          <h3>What viewers see.</h3>
+          <label>Public name<input id="publicName"></label>
+          <label>Short description<textarea id="typeDescription" rows="3"></textarea></label>
+          <div class="field-grid two">
+            <label>Icon<input id="typeIcon" maxlength="4"></label>
+            <label>Label<input id="typeLabel"></label>
+          </div>
+          <div class="field-grid two">
+            <label>Price / minimum<input id="typePrice" type="number" min="0" step="50"></label>
+            <label>Pricing<select id="pricingMode"><option value="minimum">Minimum amount</option><option value="fixed">Fixed price</option><option value="free">No payment / event only</option></select></label>
+          </div>
+          <label class="switch-row"><span><b>Available to viewers</b><small>Controls whether this type is active.</small></span><input id="typeEnabled" type="checkbox"></label>
+        </section>
+
+        <section class="tab-panel" data-panel="audio">
+          <div class="panel-kicker">TTS & AUDIO</div>
+          <h3>Sound behavior for this type.</h3>
+          <label class="switch-row"><span><b>Allow TTS</b><small>Viewer message can be spoken on stream.</small></span><input id="ttsEnabled" type="checkbox"></label>
+          <label>Default TTS voice<select id="ttsVoice"></select></label>
+          <label>Scene sound URL<input id="soundUrl" placeholder="https://.../alert.mp3"></label>
+          <label>Media / video URL<input id="mediaUrl" placeholder="https://.../drop.webm"></label>
+          <label>Sound volume<input id="soundVolume" type="range" min="0" max="1" step="0.05"><span id="soundVolumeOut" class="range-out"></span></label>
+        </section>
+
+        <section class="tab-panel" data-panel="timing">
+          <div class="panel-kicker">ANIMATION</div>
+          <h3>How it enters and leaves.</h3>
+          <label>Enter animation<select id="enterAnimation"><option value="fade">Fade</option><option value="pop">Pop</option><option value="slide-up">Slide up</option><option value="slide-left">Slide left</option><option value="bounce">Bounce</option><option value="none">None</option></select></label>
+          <label>Exit animation<select id="exitAnimation"><option value="fade">Fade</option><option value="shrink">Shrink</option><option value="slide-down">Slide down</option><option value="none">None</option></select></label>
+          <label>Animation speed<input id="animationMs" type="range" min="100" max="1500" step="50"><span id="animationMsOut" class="range-out"></span></label>
+          <label>On-screen duration<input id="durationMs" type="range" min="1500" max="15000" step="250"><span id="durationMsOut" class="range-out"></span></label>
+        </section>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<dialog id="addTypeDialog" class="sc-dialog">
+  <form method="dialog" id="addTypeForm">
+    <div class="panel-kicker">NEW DONATION TYPE</div>
+    <h2>Add another viewer interaction</h2>
+    <p>Start from a template. You can customise it immediately after creation.</p>
+    <div class="template-grid" id="templateGrid"></div>
+    <label>Name<input id="newTypeName" required placeholder="Sound Alert"></label>
+    <div class="field-grid two">
+      <label>Icon<input id="newTypeIcon" value="🔊"></label>
+      <label>Starting price<input id="newTypePrice" type="number" value="500"></label>
+    </div>
+    <div class="dialog-actions"><button value="cancel">Cancel</button><button id="createTypeBtn" value="default" class="primary">Create type</button></div>
+  </form>
+</dialog>
+
+<div id="scToast" class="sc-toast">Saved.</div>
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="realtime-preview.js"></script>
+<script src="overlay-layout.js"></script>
+<script src="stream-studio.js"></script>
+</body>
+</html>
