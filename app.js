@@ -21,10 +21,9 @@ function saveDemoEvent(event) {
 
 function demoNotice(text) {
   const n = qs('#notice');
-  if (n) {
-    n.textContent = text;
-    setTimeout(() => { if (n.textContent === text) n.textContent = ''; }, 5000);
-  }
+  if (n) { n.textContent = text; setTimeout(() => { if (n.textContent === text) n.textContent = ''; }, 5000); }
+  let toast=qs('#globalToast'); if(!toast){toast=document.createElement('div');toast.id='globalToast';toast.className='global-toast';document.body.appendChild(toast);}
+  toast.textContent=text;toast.classList.add('show');clearTimeout(window.__streamToastTimer);window.__streamToastTimer=setTimeout(()=>toast.classList.remove('show'),4200);
 }
 
 function validateMessage(text) {
@@ -94,26 +93,48 @@ function updateSupportState() {
   qs('#supportTtsSummary').textContent = checkbox.checked && eligible ? 'Read aloud' : 'Off';
 }
 
+
+function voiceProfiles() { return (cfg.tts && cfg.tts.voices) || []; }
+function selectedVoice(selectId) {
+  const el = qs(selectId);
+  return (el && el.value) || cfg.tts.defaultVoice || (voiceProfiles()[0] && voiceProfiles()[0].id) || '';
+}
+function fillVoiceSelect(selectId) {
+  const el = qs(selectId); if (!el) return; el.innerHTML='';
+  voiceProfiles().forEach(v => {
+    const o=document.createElement('option'); o.value=v.id; o.textContent=`${v.name} — ${v.style}`;
+    if(v.id===cfg.tts.defaultVoice)o.selected=true; el.appendChild(o);
+  });
+}
+function paymentNotConnected() {
+  demoNotice('Payments are not connected yet. Use “Try this alert in OBS” to test the exact interaction.');
+}
+
+function previewVoice(selectId, text) {
+  if (!('speechSynthesis' in window)) return demoNotice('Voice preview is not supported in this browser.');
+  speechSynthesis.cancel();
+  const id=selectedVoice(selectId), profile=voiceProfiles().find(v=>v.id===id)||voiceProfiles()[0]||{};
+  const sample=(text||'').trim() || 'Assalam o alaikum yaar, welcome to the stream. This is a mixed Roman Urdu and English TTS test.';
+  const u=new SpeechSynthesisUtterance(sample);
+  const roman=/\b(aap|main|mein|kya|hai|ho|yaar|bhai|bohat|nahi|kar|raha|rahi|shukriya|assalam)\b/i.test(sample);
+  u.lang=roman?'en-IN':((profile.langs||[]).find(x=>x.startsWith('en'))||'en-GB');
+  u.rate=Number(profile.rate||1);u.pitch=Number(profile.pitch||1);u.volume=Number(cfg.tts.volume||1);
+  const voices=speechSynthesis.getVoices(); const preferred=(profile.langs||[]).map(x=>x.toLowerCase());
+  const female=/female/i.test(profile.gender||''), male=/male/i.test(profile.gender||'');
+  const fn=/uzma|neerja|heera|sonia|hazel|zira|susan|aria|jenny|samantha|victoria/i, mn=/asad|ravi|george|david|mark|guy|ryan/i;
+  const scored=voices.map(v=>{let z=0,vl=(v.lang||'').toLowerCase();if(preferred.includes(vl))z+=8;else if(preferred.some(x=>x.split('-')[0]===vl.split('-')[0]))z+=4;if(female&&fn.test(v.name))z+=3;if(male&&mn.test(v.name))z+=3;return [z,v]}).sort((a,b)=>b[0]-a[0]);
+  if(scored[0])u.voice=scored[0][1];speechSynthesis.speak(u);
+}
+
 function initSupport() {
-  renderAmounts();
+  renderAmounts(); fillVoiceSelect('#supportVoice');
   qs('#customAmount').addEventListener('input', () => { renderAmounts(); updateSupportState(); });
   qs('#ttsEnabled').addEventListener('change', (e) => { e.target.dataset.touched = 'yes'; updateSupportState(); });
-  qs('#message').addEventListener('input', (e) => {
-    qs('#charCount').textContent = `${e.target.value.length} / ${cfg.tts.maxChars}`;
-  });
+  qs('#message').addEventListener('input', (e) => { qs('#charCount').textContent = `${e.target.value.length} / ${cfg.tts.maxChars}`; });
   updateSupportState();
-
-  qs('#supportBtn').addEventListener('click', () => {
-    const amount = currentSupportAmount();
-    const msg = qs('#message').value.trim();
-    const name = qs('#donorName').value.trim() || 'Anonymous';
-    if (amount < cfg.minTip) return demoNotice(`Minimum support is ${money(cfg.minTip)}.`);
-    const err = validateMessage(msg);
-    if (err) return demoNotice(err);
-    const tts = cfg.tts.enabled && amount >= cfg.tts.minAmount && qs('#ttsEnabled').checked && !!msg;
-    saveDemoEvent({ type: 'support', name, amount, currency: cfg.currency, message: msg, tts, title: 'Support' });
-    demoNotice('Demo payment verified — your stream alert has been queued. Open overlay.html to preview it.');
-  });
+  qs('#supportBtn').addEventListener('click', paymentNotConnected);
+  qs('#previewSupportVoice').addEventListener('click', () => previewVoice('#supportVoice', qs('#message').value));
+  qs('#supportDemoBtn').addEventListener('click', () => sendIntegratedDemo('support'));
 }
 
 function renderDrops() {
@@ -139,32 +160,14 @@ function selectDrop(drop, card) {
   qs('#dropSelectedName').textContent = `${drop.icon} ${drop.name} — ${money(drop.price)}`;
   qs('#dropSelectedDesc').textContent = `${drop.description} ${drop.ttsIncluded ? 'TTS message included.' : ''}`;
   qs('#dropBuyBtn').disabled = false;
+  qs('#dropDemoBtn').disabled = false;
   qs('#dropBuyBtn').textContent = `Drop ${drop.name} · ${money(drop.price)}`;
 }
 
 function initDrops() {
-  renderDrops();
-  qs('#dropBuyBtn').addEventListener('click', () => {
-    if (!selectedDrop) return;
-    const name = qs('#dropDonorName').value.trim() || 'Anonymous';
-    const msg = qs('#dropMessage').value.trim();
-    const err = validateMessage(msg);
-    if (err) return alert(err);
-    saveDemoEvent({
-      type: 'drop',
-      name,
-      amount: selectedDrop.price,
-      currency: cfg.currency,
-      message: msg,
-      tts: selectedDrop.ttsIncluded && !!msg,
-      title: selectedDrop.name,
-      rarity: selectedDrop.rarity,
-      icon: selectedDrop.icon,
-      assetUrl: selectedDrop.assetUrl || '',
-      soundUrl: selectedDrop.soundUrl || ''
-    });
-    alert(`Demo verified: ${selectedDrop.name} has been sent to the overlay.`);
-  });
+  renderDrops(); fillVoiceSelect('#dropVoice');
+  qs('#dropBuyBtn').addEventListener('click', paymentNotConnected);
+  qs('#dropDemoBtn').addEventListener('click', () => sendIntegratedDemo('drop'));
 }
 
 function renderChallenges() {
@@ -191,29 +194,45 @@ function selectChallenge(challenge, card) {
   qs('#challengeSelectedName').textContent = `${challenge.icon} ${challenge.title} — ${money(challenge.price)}`;
   qs('#challengeSelectedDesc').textContent = `${challenge.description} ${challenge.rules}`;
   qs('#challengeBuyBtn').disabled = false;
+  qs('#challengeDemoBtn').disabled = false;
   qs('#challengeBuyBtn').textContent = `Buy challenge · ${money(challenge.price)}`;
 }
 
 function initChallenges() {
   renderChallenges();
-  qs('#challengeBuyBtn').addEventListener('click', () => {
-    if (!selectedChallenge) return;
-    const name = qs('#challengeDonorName').value.trim() || 'Anonymous';
-    const note = qs('#challengeNote').value.trim();
-    const err = validateMessage(note);
-    if (err) return alert(err);
-    saveDemoEvent({
-      type: 'challenge',
-      name,
-      amount: selectedChallenge.price,
-      currency: cfg.currency,
-      message: note,
-      tts: false,
-      title: selectedChallenge.title,
-      icon: selectedChallenge.icon
-    });
-    alert(`Demo verified: ${selectedChallenge.title} has been queued for the stream.`);
-  });
+  qs('#challengeBuyBtn').addEventListener('click', paymentNotConnected);
+  qs('#challengeDemoBtn').addEventListener('click', () => sendIntegratedDemo('challenge'));
+}
+
+// ---------------- Integrated viewer demo alerts ----------------
+const VIEWER_DEMO_LAST_SENT = 'streamnest:viewerDemoLastSent';
+function demoCfg(){ return cfg.viewerDemo || {enabled:false,cooldownSeconds:20,maxChars:180,allowTts:true}; }
+function remainingDemoCooldown(){ const last=Number(localStorage.getItem(VIEWER_DEMO_LAST_SENT)||0); return Math.max(0,Math.ceil((last+Number(demoCfg().cooldownSeconds||20)*1000-Date.now())/1000)); }
+function setDemoButtonsBusy(busy,label='Sending…'){
+  ['#supportDemoBtn','#dropDemoBtn','#challengeDemoBtn'].forEach(id=>{const b=qs(id);if(!b)return;if(busy){b.dataset.oldText=b.textContent;b.disabled=true;b.textContent=label;}else{if(b.dataset.oldText)b.textContent=b.dataset.oldText; b.disabled=(id==='#dropDemoBtn'&&!selectedDrop)||(id==='#challengeDemoBtn'&&!selectedChallenge);}});
+}
+async function sendIntegratedDemo(type){
+  const d=demoCfg();
+  if(!d.enabled) return demoNotice('Viewer demo alerts are disabled right now.');
+  const wait=remainingDemoCooldown(); if(wait>0) return demoNotice(`Please wait ${wait}s before sending another demo alert.`);
+  if(!window.StreamPreviewTransport) return demoNotice('OBS realtime connection is unavailable.');
+  let event;
+  if(type==='support'){
+    const amount=currentSupportAmount(); const msg=qs('#message').value.trim(); const name=qs('#donorName').value.trim()||'Anonymous';
+    if(amount<cfg.minTip)return demoNotice(`Minimum support is ${money(cfg.minTip)}.`); const err=validateMessage(msg); if(err)return demoNotice(err);
+    const tts=cfg.tts.enabled&&amount>=cfg.tts.minAmount&&qs('#ttsEnabled').checked&&!!msg;
+    event={type:'support',name,amount,currency:cfg.currency,message:msg,tts,title:'Support',voiceProfile:selectedVoice('#supportVoice')};
+  } else if(type==='drop'){
+    if(!selectedDrop)return demoNotice('Choose a Rare Drop first.'); const msg=qs('#dropMessage').value.trim(); const err=validateMessage(msg);if(err)return demoNotice(err);
+    event={type:'drop',name:qs('#dropDonorName').value.trim()||'Anonymous',amount:selectedDrop.price,currency:cfg.currency,message:msg,tts:selectedDrop.ttsIncluded&&!!msg,title:selectedDrop.name,rarity:selectedDrop.rarity,icon:selectedDrop.icon,assetUrl:selectedDrop.assetUrl||'',soundUrl:selectedDrop.soundUrl||'',voiceProfile:selectedVoice('#dropVoice')};
+  } else {
+    if(!selectedChallenge)return demoNotice('Choose a Challenge first.'); const note=qs('#challengeNote').value.trim();const err=validateMessage(note);if(err)return demoNotice(err);
+    event={type:'challenge',name:qs('#challengeDonorName').value.trim()||'Anonymous',amount:selectedChallenge.price,currency:cfg.currency,message:note,tts:false,title:selectedChallenge.title,icon:selectedChallenge.icon};
+  }
+  event={...event,verified:true,demo:true,viewerDemo:true}; setDemoButtonsBusy(true,'Sending to OBS…');
+  try{ const result=await window.StreamPreviewTransport.send({kind:'studio-preview',source:'viewer-demo-inline',event}); if(!result?.cloud)return demoNotice('Demo sent locally, but OBS cloud connection is unavailable.'); localStorage.setItem(VIEWER_DEMO_LAST_SENT,String(Date.now())); demoNotice('Demo alert sent to OBS — watch the stream.'); }
+  catch(e){console.error(e);demoNotice('Could not send the demo alert. Please try again.');}
+  finally{setDemoButtonsBusy(false);}
 }
 
 initIdentity();
@@ -221,155 +240,3 @@ initTabs();
 initSupport();
 initDrops();
 initChallenges();
-
-// ---------------- Viewer demo alerts ----------------
-let selectedViewerDemoType = 'support';
-let viewerDemoCooldownTimer = null;
-const VIEWER_DEMO_LAST_SENT = 'streamnest:viewerDemoLastSent';
-
-function demoCfg() {
-  return cfg.viewerDemo || { enabled: false, cooldownSeconds: 20, maxChars: 120, allowTts: true };
-}
-
-function viewerDemoMeta(type) {
-  const d = demoCfg();
-  if (type === 'drop') return {
-    icon: '✨', title: 'Rare Drop', copy: 'Sends a premium Rare Drop demo to the live OBS overlay.',
-    amount: d.dropAmount || 2500, eventTitle: 'Demo Rare Drop', rarity: 'RARE'
-  };
-  if (type === 'challenge') return {
-    icon: '🎯', title: 'Challenge', copy: 'Sends a Challenge demo to the live OBS overlay.',
-    amount: d.challengeAmount || 1000, eventTitle: 'Demo Challenge'
-  };
-  return {
-    icon: '💬', title: 'Support + TTS', copy: 'Sends a standard demo support alert to the live OBS overlay.',
-    amount: d.supportAmount || 500, eventTitle: 'Demo Support'
-  };
-}
-
-function setViewerDemoNotice(text, kind = 'ok') {
-  const el = qs('#demoViewerNotice');
-  if (!el) return;
-  el.textContent = text;
-  el.className = `demo-viewer-notice show ${kind}`;
-}
-
-function clearViewerDemoNotice() {
-  const el = qs('#demoViewerNotice');
-  if (!el) return;
-  el.textContent = '';
-  el.className = 'demo-viewer-notice';
-}
-
-function remainingViewerDemoCooldown() {
-  const seconds = Number(demoCfg().cooldownSeconds || 20);
-  const last = Number(localStorage.getItem(VIEWER_DEMO_LAST_SENT) || 0);
-  return Math.max(0, Math.ceil((last + seconds * 1000 - Date.now()) / 1000));
-}
-
-function updateViewerDemoButton() {
-  const btn = qs('#sendViewerDemo');
-  if (!btn) return;
-  const d = demoCfg();
-  if (!d.enabled) {
-    btn.disabled = true;
-    btn.textContent = 'Demo alerts are currently disabled';
-    qs('#demoPanel')?.classList.add('demo-offline');
-    return;
-  }
-  const remain = remainingViewerDemoCooldown();
-  btn.disabled = remain > 0;
-  btn.classList.toggle('cooldown', remain > 0);
-  btn.textContent = remain > 0 ? `Wait ${remain}s before another demo` : '🧪 Send demo alert';
-}
-
-function startViewerDemoCooldownTicker() {
-  clearInterval(viewerDemoCooldownTimer);
-  viewerDemoCooldownTimer = setInterval(updateViewerDemoButton, 500);
-  updateViewerDemoButton();
-}
-
-function selectViewerDemoType(type) {
-  selectedViewerDemoType = type;
-  qsa('[data-demo-type]').forEach(btn => btn.classList.toggle('active', btn.dataset.demoType === type));
-  const meta = viewerDemoMeta(type);
-  qs('#demoPreviewIcon').textContent = meta.icon;
-  qs('#demoPreviewTitle').textContent = meta.title;
-  qs('#demoPreviewCopy').textContent = meta.copy;
-  const ttsCard = qs('#demoTtsCard');
-  const tts = qs('#demoTtsEnabled');
-  const eligible = demoCfg().allowTts !== false && type !== 'challenge';
-  tts.disabled = !eligible;
-  if (!eligible) tts.checked = false;
-  ttsCard.classList.toggle('disabled', !eligible);
-  clearViewerDemoNotice();
-}
-
-async function sendViewerDemoAlert() {
-  const d = demoCfg();
-  if (!d.enabled) return setViewerDemoNotice('The streamer has disabled viewer demo alerts.', 'error');
-  const remain = remainingViewerDemoCooldown();
-  if (remain > 0) return setViewerDemoNotice(`Please wait ${remain} seconds before sending another demo.`, 'error');
-  if (!window.StreamPreviewTransport) return setViewerDemoNotice('Live demo connection is unavailable. Refresh and try again.', 'error');
-
-  const name = (qs('#demoViewerName').value || '').trim().slice(0, 32) || 'Anonymous';
-  const message = (qs('#demoViewerMessage').value || '').trim().slice(0, Number(d.maxChars || 120));
-  const err = validateMessage(message);
-  if (err) return setViewerDemoNotice(err, 'error');
-  if (!message) return setViewerDemoNotice('Write a short message before sending your demo.', 'error');
-
-  const meta = viewerDemoMeta(selectedViewerDemoType);
-  const tts = d.allowTts !== false && selectedViewerDemoType !== 'challenge' && !!qs('#demoTtsEnabled').checked;
-  const event = {
-    verified: true,
-    demo: true,
-    viewerDemo: true,
-    type: selectedViewerDemoType,
-    name,
-    amount: meta.amount,
-    currency: cfg.currency,
-    message,
-    tts,
-    title: meta.eventTitle,
-    icon: meta.icon,
-    rarity: selectedViewerDemoType === 'drop' ? meta.rarity : undefined
-  };
-
-  const btn = qs('#sendViewerDemo');
-  btn.disabled = true;
-  btn.textContent = 'Sending to stream…';
-  try {
-    const result = await window.StreamPreviewTransport.send({ kind: 'studio-preview', source: 'viewer-demo', event });
-    if (!result?.cloud) {
-      setViewerDemoNotice('Your demo was sent locally, but the OBS cloud connection is not available right now.', 'error');
-      return;
-    }
-    localStorage.setItem(VIEWER_DEMO_LAST_SENT, String(Date.now()));
-    setViewerDemoNotice('Demo alert sent! Watch the stream — it should appear in OBS now.', 'ok');
-    qs('#demoViewerMessage').value = '';
-    qs('#demoCharCount').textContent = `0 / ${d.maxChars || 120}`;
-  } catch (error) {
-    console.error(error);
-    setViewerDemoNotice('Could not send the demo alert. Please try again in a moment.', 'error');
-  } finally {
-    updateViewerDemoButton();
-  }
-}
-
-function initViewerDemoAlerts() {
-  const panel = qs('#demoPanel');
-  if (!panel) return;
-  const d = demoCfg();
-  qs('#demoViewerMessage').maxLength = Number(d.maxChars || 120);
-  qs('#demoCharCount').textContent = `0 / ${d.maxChars || 120}`;
-  qs('#demoCooldownLabel').textContent = `${Number(d.cooldownSeconds || 20)} seconds`;
-  qsa('[data-demo-type]').forEach(btn => btn.addEventListener('click', () => selectViewerDemoType(btn.dataset.demoType)));
-  qs('#demoViewerMessage').addEventListener('input', e => {
-    qs('#demoCharCount').textContent = `${e.target.value.length} / ${d.maxChars || 120}`;
-  });
-  qs('#sendViewerDemo').addEventListener('click', sendViewerDemoAlert);
-  selectViewerDemoType('support');
-  startViewerDemoCooldownTicker();
-}
-
-initViewerDemoAlerts();

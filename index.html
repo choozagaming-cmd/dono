@@ -29,7 +29,6 @@
       <button class="interaction-tab active" data-tab="support"><span>💬</span><strong>Support + TTS</strong><small>Send a message</small></button>
       <button class="interaction-tab" data-tab="drops"><span>✨</span><strong>Rare Drops</strong><small>Premium alerts</small></button>
       <button class="interaction-tab" data-tab="challenges"><span>🎯</span><strong>Challenges</strong><small>Change the stream</small></button>
-      <button class="interaction-tab demo-tab-btn" data-tab="demo"><span>🧪</span><strong>Demo Alert</strong><small>Try it on stream</small></button>
     </section>
 
     <section id="supportPanel" class="interaction-panel active">
@@ -59,6 +58,13 @@
             <span class="tts-copy"><strong>Read this message on stream</strong><small id="ttsRule">Unlocks at Rs 500</small></span>
             <span id="ttsStatus" class="tts-status">TTS</span>
           </label>
+
+          <div class="voice-picker">
+            <div class="label gap-top">TTS voice</div>
+            <select id="supportVoice" class="field"></select>
+            <button id="previewSupportVoice" type="button" class="btn ghost voice-preview-btn">🔊 Preview selected voice</button>
+            <div class="voice-help">Auto-tuned for English + Roman Urdu. Voice quality depends on the TTS engine available on the stream PC.</div>
+          </div>
         </div>
 
         <aside class="panel checkout-card">
@@ -69,6 +75,7 @@
           <div class="summary-line"><span>Alert</span><b>Standard</b></div>
           <div class="divider"></div>
           <button id="supportBtn" class="btn primary full">Continue to payment</button>
+          <button id="supportDemoBtn" class="btn ghost full demo-inline-btn">🧪 Try this alert in OBS</button>
           <div class="payment-hints"><span>🇵🇰 Local methods</span><span>🌍 International cards</span></div>
           <div id="notice" class="notice"></div>
         </aside>
@@ -85,7 +92,9 @@
         <div class="drawer-actions">
           <input id="dropDonorName" class="field compact" maxlength="40" placeholder="Display name">
           <input id="dropMessage" class="field compact" maxlength="180" placeholder="Optional TTS message">
+          <select id="dropVoice" class="field compact"></select>
           <button id="dropBuyBtn" class="btn primary" disabled>Choose a drop</button>
+          <button id="dropDemoBtn" class="btn ghost" disabled>🧪 Try in OBS</button>
         </div>
       </div>
     </section>
@@ -101,66 +110,8 @@
           <input id="challengeDonorName" class="field compact" maxlength="40" placeholder="Display name">
           <input id="challengeNote" class="field compact" maxlength="120" placeholder="Optional note / allowed choice">
           <button id="challengeBuyBtn" class="btn primary" disabled>Choose a challenge</button>
+          <button id="challengeDemoBtn" class="btn ghost" disabled>🧪 Try in OBS</button>
         </div>
-      </div>
-    </section>
-
-
-    <section id="demoPanel" class="interaction-panel">
-      <div class="section-heading">
-        <div>
-          <div class="eyebrow">LIVE DEMO — NO PAYMENT</div>
-          <h1>Send a <span>demo alert</span> to the stream.</h1>
-          <p class="section-copy">Pick an alert style, add your name and message, then send it straight to the stream overlay. Demo alerts are clearly labelled and do not charge you.</p>
-        </div>
-        <div class="demo-live-pill"><span></span> OBS DEMO</div>
-      </div>
-
-      <div class="two-col demo-two-col">
-        <div class="panel content-card">
-          <div class="label">Choose demo type</div>
-          <div class="demo-type-grid" id="demoTypeGrid">
-            <button type="button" class="demo-type active" data-demo-type="support">
-              <span class="demo-type-icon">💬</span><strong>Support + TTS</strong><small>Standard support alert</small>
-            </button>
-            <button type="button" class="demo-type" data-demo-type="drop">
-              <span class="demo-type-icon">✨</span><strong>Rare Drop</strong><small>Premium drop preview</small>
-            </button>
-            <button type="button" class="demo-type" data-demo-type="challenge">
-              <span class="demo-type-icon">🎯</span><strong>Challenge</strong><small>Challenge alert preview</small>
-            </button>
-          </div>
-
-          <div class="label gap-top">Your display name</div>
-          <input id="demoViewerName" class="field" maxlength="32" placeholder="Your name or Anonymous">
-
-          <div class="label gap-top">Message</div>
-          <div class="message-wrap">
-            <textarea id="demoViewerMessage" class="field" rows="4" maxlength="120" placeholder="Write a short demo message…"></textarea>
-            <div class="message-meta"><span id="demoCharCount">0 / 120</span></div>
-          </div>
-
-          <label id="demoTtsCard" class="tts-card">
-            <input id="demoTtsEnabled" type="checkbox" checked>
-            <span class="tts-icon">🔊</span>
-            <span class="tts-copy"><strong>Read demo message with TTS</strong><small>Available for Support and Rare Drop demos</small></span>
-            <span class="tts-status">DEMO TTS</span>
-          </label>
-        </div>
-
-        <aside class="panel checkout-card demo-send-card">
-          <div class="eyebrow">DEMO PREVIEW</div>
-          <div class="demo-preview-icon" id="demoPreviewIcon">💬</div>
-          <h3 id="demoPreviewTitle">Support + TTS</h3>
-          <p class="sub" id="demoPreviewCopy">Sends a standard demo support alert to the live OBS overlay.</p>
-          <div class="summary-line"><span>Charge</span><b>Rs 0 — Demo only</b></div>
-          <div class="summary-line"><span>OBS label</span><b>DEMO</b></div>
-          <div class="summary-line"><span>Cooldown</span><b id="demoCooldownLabel">20 seconds</b></div>
-          <div class="divider"></div>
-          <button id="sendViewerDemo" class="btn primary full">🧪 Send demo alert</button>
-          <div id="demoViewerNotice" class="demo-viewer-notice" aria-live="polite"></div>
-          <div class="demo-disclaimer">Demo alerts may be disabled or rate-limited by the streamer at any time.</div>
-        </aside>
       </div>
     </section>
 
