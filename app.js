@@ -106,9 +106,21 @@ function fillVoiceSelect(selectId) {
     if(v.id===cfg.tts.defaultVoice)o.selected=true; el.appendChild(o);
   });
 }
-function paymentNotConnected() {
-  demoNotice('Payments are not connected yet. Use “Try this alert in OBS” to test the exact interaction.');
+let checkoutContext = null; let selectedPaymentMethod = null;
+function buildSupportContext(){
+  const amount=currentSupportAmount(); const msg=qs('#message').value.trim(); const anonymous=qs('#anonymousToggle')?.checked; const name=anonymous?'Anonymous':(qs('#donorName').value.trim()||'Anonymous');
+  const tts=cfg.tts.enabled&&amount>=cfg.tts.minAmount&&qs('#ttsEnabled').checked&&!!msg; const voice=voiceProfiles().find(v=>v.id===selectedVoice('#supportVoice'))||{};
+  return {type:'support',label:'Support + message',name,amount,message:msg,tts,voiceName:tts?(voice.name||'Default'):'Off'};
 }
+function renderCheckout(ctx){
+  checkoutContext=ctx; selectedPaymentMethod=null; const host=qs('#checkoutSummary');
+  host.innerHTML=`<div class="checkout-item"><span>Interaction</span><b>${ctx.label}</b></div><div class="checkout-item"><span>From</span><b>${ctx.name||'Anonymous'}</b></div><div class="checkout-item"><span>Amount</span><b>${money(ctx.amount)}</b></div>${ctx.tts!==undefined?`<div class="checkout-item"><span>TTS</span><b>${ctx.tts?ctx.voiceName:'Off'}</b></div>`:''}${ctx.message?`<div class="checkout-item"><span>Message</span><b>${ctx.message.slice(0,72)}</b></div>`:''}`;
+  const methods=qs('#paymentMethodList'); methods.innerHTML=''; (cfg.checkout?.localMethods||[]).forEach(m=>{const b=document.createElement('button');b.type='button';b.className='payment-method';b.innerHTML=`<span class="pay-icon">${m.icon}</span><span><b>${m.name}</b><small>${m.detail}</small></span>`;b.onclick=()=>{selectedPaymentMethod=m.id;[...methods.children].forEach(x=>x.classList.toggle('active',x===b));};methods.appendChild(b);});
+  qs('#checkoutTrust').innerHTML=(cfg.checkout?.trust||[]).map(x=>`<div>✓ ${x}</div>`).join(''); qs('#checkoutModal').classList.add('open'); qs('#checkoutModal').setAttribute('aria-hidden','false');
+}
+function closeCheckout(){qs('#checkoutModal').classList.remove('open');qs('#checkoutModal').setAttribute('aria-hidden','true');}
+function paymentNotConnected(ctx){ renderCheckout(ctx); }
+
 
 async function previewVoice(selectId, text) {
   const id = selectedVoice(selectId);
@@ -154,13 +166,19 @@ async function previewVoice(selectId, text) {
   if (scored[0]) u.voice = scored[0][1]; speechSynthesis.speak(u);
 }
 
+
+function renderVoiceCards(){ const host=qs('#supportVoiceCards'); if(!host)return; host.innerHTML=''; voiceProfiles().forEach(v=>{const b=document.createElement('button');b.type='button';b.className='voice-card'+(selectedVoice('#supportVoice')===v.id?' active':'');b.innerHTML=`${v.badge?`<span class="voice-badge">${v.badge}</span>`:''}<b>${v.name}</b><small>${v.style}</small>`;b.onclick=()=>{qs('#supportVoice').value=v.id; renderVoiceCards();};host.appendChild(b);});}
+function initFilters(){ qsa('[data-drop-filter]').forEach(b=>b.onclick=()=>{qsa('[data-drop-filter]').forEach(x=>x.classList.toggle('active',x===b)); const f=b.dataset.dropFilter; qsa('#dropGrid .shop-card').forEach((c,i)=>{const d=cfg.rareDrops[i]; c.style.display=(f==='all'||(f==='featured'&&d.featured)||(f==='legendary'&&d.rarity==='LEGENDARY'))?'':'none';});}); qsa('[data-challenge-filter]').forEach(b=>b.onclick=()=>{qsa('[data-challenge-filter]').forEach(x=>x.classList.toggle('active',x===b)); const f=b.dataset.challengeFilter; qsa('#challengeGrid .shop-card').forEach((c,i)=>{const d=cfg.challenges[i]; c.style.display=(f==='all'||d.category===f)?'':'none';});});}
+function initCheckoutUI(){ qsa('[data-close-checkout]').forEach(x=>x.onclick=closeCheckout); qs('#finalPayBtn').onclick=()=>{if(!selectedPaymentMethod)return qs('#checkoutNotice').textContent='Choose a payment method first.'; qs('#checkoutNotice').textContent=cfg.checkout?.providerConnected?'Opening secure payment…':'Payment gateway connection is the next step. Your checkout UI is ready.';}; qs('#checkoutDemoBtn').onclick=()=>{if(!checkoutContext)return; closeCheckout(); sendIntegratedDemo(checkoutContext.type==='support'?'support':checkoutContext.type==='drop'?'drop':'challenge');}; qs('#howItWorksBtn').onclick=()=>{qs('#howModal').classList.add('open');qs('#howModal').setAttribute('aria-hidden','false');}; qsa('[data-close-how]').forEach(x=>x.onclick=()=>{qs('#howModal').classList.remove('open');qs('#howModal').setAttribute('aria-hidden','true');});}
+
 function initSupport() {
-  renderAmounts(); fillVoiceSelect('#supportVoice');
+  renderAmounts(); fillVoiceSelect('#supportVoice'); renderVoiceCards();
   qs('#customAmount').addEventListener('input', () => { renderAmounts(); updateSupportState(); });
   qs('#ttsEnabled').addEventListener('change', (e) => { e.target.dataset.touched = 'yes'; updateSupportState(); });
   qs('#message').addEventListener('input', (e) => { qs('#charCount').textContent = `${e.target.value.length} / ${cfg.tts.maxChars}`; });
   updateSupportState();
-  qs('#supportBtn').addEventListener('click', paymentNotConnected);
+  qs('#supportBtn').addEventListener('click', () => { const c=buildSupportContext(); if(c.amount<cfg.minTip)return demoNotice(`Minimum support is ${money(cfg.minTip)}.`); const err=validateMessage(c.message); if(err)return demoNotice(err); paymentNotConnected(c); });
+  qs('#anonymousToggle')?.addEventListener('change',e=>{qs('#donorName').disabled=e.target.checked; if(e.target.checked)qs('#donorName').value='';});
   qs('#previewSupportVoice').addEventListener('click', () => previewVoice('#supportVoice', qs('#message').value));
   qs('#supportDemoBtn').addEventListener('click', () => sendIntegratedDemo('support'));
 }
@@ -173,7 +191,7 @@ function renderDrops() {
     card.type = 'button';
     card.className = `shop-card rarity-${drop.rarity.toLowerCase()}`;
     card.innerHTML = `
-      <div class="shop-card-top"><span class="shop-icon">${drop.icon}</span><span class="rarity-tag">${drop.rarity}</span></div>
+      <div class="shop-card-top"><span class="shop-icon">${drop.icon}</span><span class="rarity-tag">${drop.rarity}</span></div>${drop.featured?'<div class="featured-pill">★ FEATURED</div>':''}
       <h3>${drop.name}</h3>
       <p>${drop.description}</p>
       <div class="shop-card-bottom"><b>${money(drop.price)}</b><span>${drop.remaining} left</span></div>`;
@@ -194,7 +212,7 @@ function selectDrop(drop, card) {
 
 function initDrops() {
   renderDrops(); fillVoiceSelect('#dropVoice');
-  qs('#dropBuyBtn').addEventListener('click', paymentNotConnected);
+  qs('#dropBuyBtn').addEventListener('click', () => { if(!selectedDrop)return; const msg=qs('#dropMessage').value.trim(); const err=validateMessage(msg); if(err)return demoNotice(err); const voice=voiceProfiles().find(v=>v.id===selectedVoice('#dropVoice'))||{}; paymentNotConnected({type:'drop',label:`${selectedDrop.icon} ${selectedDrop.name}`,name:qs('#dropDonorName').value.trim()||'Anonymous',amount:selectedDrop.price,message:msg,tts:selectedDrop.ttsIncluded&&!!msg,voiceName:voice.name||'Default'}); });
   qs('#dropDemoBtn').addEventListener('click', () => sendIntegratedDemo('drop'));
 }
 
@@ -228,7 +246,7 @@ function selectChallenge(challenge, card) {
 
 function initChallenges() {
   renderChallenges();
-  qs('#challengeBuyBtn').addEventListener('click', paymentNotConnected);
+  qs('#challengeBuyBtn').addEventListener('click', () => { if(!selectedChallenge)return; const note=qs('#challengeNote').value.trim(); const err=validateMessage(note); if(err)return demoNotice(err); paymentNotConnected({type:'challenge',label:`${selectedChallenge.icon} ${selectedChallenge.title}`,name:qs('#challengeDonorName').value.trim()||'Anonymous',amount:selectedChallenge.price,message:note}); });
   qs('#challengeDemoBtn').addEventListener('click', () => sendIntegratedDemo('challenge'));
 }
 
@@ -268,3 +286,5 @@ initTabs();
 initSupport();
 initDrops();
 initChallenges();
+initFilters();
+initCheckoutUI();

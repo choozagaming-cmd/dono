@@ -14,6 +14,14 @@
       <div class="live-chip"><span></span> LIVE SUPPORT</div>
     </header>
 
+    <section class="viewer-intro panel-soft">
+      <div class="intro-copy">
+        <span class="status-dot"></span><b>Interact with the stream live</b>
+        <span>Pick an interaction, customise it, then pay. Your alert only triggers after payment is confirmed.</span>
+      </div>
+      <button class="how-btn" type="button" id="howItWorksBtn">How it works</button>
+    </section>
+
     <section class="stream-head panel-soft">
       <div class="profile">
         <div class="avatar">🎮</div>
@@ -23,6 +31,12 @@
         </div>
       </div>
       <div class="mini-note">Payments trigger stream interactions only after payment verification.</div>
+    </section>
+
+    <section class="quick-guide" aria-label="How it works">
+      <div><span>1</span><b>Choose</b><small>Support, Drop or Challenge</small></div>
+      <div><span>2</span><b>Customise</b><small>Name, message & TTS voice</small></div>
+      <div><span>3</span><b>Pay</b><small>Alert triggers after verification</small></div>
     </section>
 
     <section class="interaction-tabs" aria-label="Support type">
@@ -39,12 +53,12 @@
 
       <div class="two-col">
         <div class="panel content-card">
-          <div class="label">Choose amount</div>
+          <div class="label-row"><div class="label">Choose amount</div><span class="helper-chip">Most viewers choose Rs 500–1,000</span></div>
           <div id="amounts" class="amounts"></div>
           <input id="customAmount" class="field" type="number" min="1" inputmode="numeric" placeholder="Custom amount (PKR)">
 
           <div class="label gap-top">Your name</div>
-          <input id="donorName" class="field" maxlength="40" placeholder="Display name or Anonymous">
+          <div class="name-row"><input id="donorName" class="field" maxlength="40" placeholder="Display name"><label class="mini-toggle"><input id="anonymousToggle" type="checkbox"> Anonymous</label></div>
 
           <div class="label gap-top">Message</div>
           <div class="message-wrap">
@@ -59,11 +73,16 @@
             <span id="ttsStatus" class="tts-status">TTS</span>
           </label>
 
+          <div class="support-options">
+            <label class="mini-option"><input id="showMessageOnScreen" type="checkbox" checked><span><b>Show message on screen</b><small>Your text appears with the alert</small></span></label>
+            <label class="mini-option"><input id="priorityAlert" type="checkbox"><span><b>Priority styling</b><small>Preview-only option for now</small></span></label>
+          </div>
+
           <div class="voice-picker">
             <div class="label gap-top">TTS voice</div>
-            <select id="supportVoice" class="field"></select>
+            <div id="supportVoiceCards" class="voice-cards"></div><select id="supportVoice" class="field hidden-select"></select>
             <button id="previewSupportVoice" type="button" class="btn ghost voice-preview-btn">🔊 Preview selected voice</button>
-            <div class="voice-help">Auto-tuned for English + Roman Urdu. Voice quality depends on the TTS engine available on the stream PC.</div>
+            <div class="voice-help">Best for English + Roman Urdu. Preview the voice before paying.</div>
           </div>
         </div>
 
@@ -74,9 +93,9 @@
           <div class="summary-line"><span>TTS</span><b id="supportTtsSummary">Included</b></div>
           <div class="summary-line"><span>Alert</span><b>Standard</b></div>
           <div class="divider"></div>
-          <button id="supportBtn" class="btn primary full">Continue to payment</button>
+          <button id="supportBtn" class="btn primary full">Review & pay <span>→</span></button>
           <button id="supportDemoBtn" class="btn ghost full demo-inline-btn">🧪 Try this alert in OBS</button>
-          <div class="payment-hints"><span>🇵🇰 Local methods</span><span>🌍 International cards</span></div>
+          <div class="payment-hints"><span>🇵🇰 Pakistan</span><span>💳 Cards worldwide</span></div><div class="micro-trust">🔒 Secure checkout · alert after verification</div>
           <div id="notice" class="notice"></div>
         </aside>
       </div>
@@ -86,7 +105,7 @@
       <div class="section-heading">
         <div><div class="eyebrow">SIGNATURE INTERACTIONS</div><h1>Trigger a <span>Rare Drop.</span></h1><p class="section-copy">These are your own limited premium alerts. Set the animation, sound, price and availability yourself.</p></div>
       </div>
-      <div id="dropGrid" class="card-grid"></div>
+      <div class="filter-row"><button class="filter-chip active" data-drop-filter="all">All</button><button class="filter-chip" data-drop-filter="featured">Featured</button><button class="filter-chip" data-drop-filter="legendary">Legendary</button></div><div id="dropGrid" class="card-grid"></div>
       <div class="panel purchase-drawer" id="dropDrawer">
         <div><div class="eyebrow">SELECTED DROP</div><h3 id="dropSelectedName">Choose a Rare Drop above</h3><p id="dropSelectedDesc" class="sub">Your selected drop will appear here.</p></div>
         <div class="drawer-actions">
@@ -103,7 +122,7 @@
       <div class="section-heading">
         <div><div class="eyebrow">VIEWER-CONTROLLED MOMENTS</div><h1>Buy a <span>Challenge.</span></h1><p class="section-copy">Only challenges you pre-approve are listed. Viewers pay to trigger one; you stay in control of safety and game suitability.</p></div>
       </div>
-      <div id="challengeGrid" class="card-grid"></div>
+      <div class="filter-row"><button class="filter-chip active" data-challenge-filter="all">All</button><button class="filter-chip" data-challenge-filter="Quick">Quick</button><button class="filter-chip" data-challenge-filter="Viewer Control">Viewer control</button><button class="filter-chip" data-challenge-filter="Hard">Hard</button></div><div id="challengeGrid" class="card-grid"></div>
       <div class="panel purchase-drawer" id="challengeDrawer">
         <div><div class="eyebrow">SELECTED CHALLENGE</div><h3 id="challengeSelectedName">Choose a Challenge above</h3><p id="challengeSelectedDesc" class="sub">Challenge details will appear here.</p></div>
         <div class="drawer-actions">
@@ -122,9 +141,34 @@
     </footer>
   </main>
 
-  <script src="config.js?v=5.1.0"></script>
+  <div id="checkoutModal" class="checkout-modal" aria-hidden="true">
+    <div class="checkout-backdrop" data-close-checkout></div>
+    <section class="checkout-sheet" role="dialog" aria-modal="true" aria-labelledby="checkoutTitle">
+      <button class="checkout-close" type="button" data-close-checkout>×</button>
+      <div class="eyebrow">SECURE CHECKOUT</div>
+      <h2 id="checkoutTitle">Review your interaction</h2>
+      <div id="checkoutSummary" class="checkout-summary"></div>
+      <div class="label gap-top">Choose payment method</div>
+      <div id="paymentMethodList" class="payment-method-list"></div>
+      <div id="checkoutTrust" class="checkout-trust"></div>
+      <button id="finalPayBtn" class="btn primary full checkout-pay">Pay securely</button>
+      <button id="checkoutDemoBtn" class="btn ghost full">Try this exact alert in OBS instead</button>
+      <div id="checkoutNotice" class="notice"></div>
+    </section>
+  </div>
+
+  <div id="howModal" class="checkout-modal" aria-hidden="true">
+    <div class="checkout-backdrop" data-close-how></div>
+    <section class="checkout-sheet how-sheet" role="dialog" aria-modal="true">
+      <button class="checkout-close" type="button" data-close-how>×</button>
+      <div class="eyebrow">HOW IT WORKS</div><h2>From click to stream in three steps</h2>
+      <div class="how-list"><div><b>1. Pick an interaction</b><span>Support with TTS, trigger a Rare Drop, or buy a listed Challenge.</span></div><div><b>2. Make it yours</b><span>Add your display name, message, and choose a TTS voice where available.</span></div><div><b>3. Pay securely</b><span>The stream alert is released only after the payment provider confirms the payment.</span></div></div>
+    </section>
+  </div>
+
+  <script src="config.js?v=6.0.0"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="realtime-preview.js?v=5.1.0"></script>
-  <script src="app.js?v=5.1.0"></script>
+  <script src="realtime-preview.js?v=6.0.0"></script>
+  <script src="app.js?v=6.0.0"></script>
 </body>
 </html>
